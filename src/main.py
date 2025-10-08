@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.routers.comment import router as comment_router
-from app.routers.map import router as map_router
+from app.routers.photo import router as map_router
 from app.routers.user import router as user_router
 
 app = FastAPI()

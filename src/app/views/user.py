@@ -8,6 +8,7 @@ class UserView:
 
     return users
 
+
   async def create_user(user: User):
     new_user = await engine.save(user)
 

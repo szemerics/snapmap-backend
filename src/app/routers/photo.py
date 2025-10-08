@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from app.models.map import Photo
-from app.views.map import PhotoViews
+from app.models.photo import CreatePhoto
+from app.views.photo import PhotoViews
 
 router = APIRouter()
 
@@ -8,6 +8,7 @@ router = APIRouter()
 async def get_all_photos():
     return await PhotoViews.get_all_photos() 
 
+
 @router.post("/")
-async def create_photo(photo: Photo):
+async def create_photo(photo: CreatePhoto):
   return await PhotoViews.create_photo(photo)
