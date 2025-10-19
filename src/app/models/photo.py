@@ -1,4 +1,4 @@
-from odmantic import Model, EmbeddedModel, Field
+from odmantic import Model, EmbeddedModel
 from datetime import datetime
 from bson import ObjectId
 from typing import Optional
@@ -22,16 +22,15 @@ class Photo(Model):
     location: Location
     date: datetime
     category: str
-    gear: Optional[Gear] = Field(default=None)
+    gear: Optional[Gear] = None
     settings_used: Optional[Settings] = None
 
 
 class CreatePhoto(BaseModel):
     user_id: str
-    photo_url: str
     location: Location
     date: datetime
     category: str
-    gear: Optional[Gear] = Field(default=None)
+    gear: Optional[Gear] = None
     settings_used: Optional[Settings] = None
 

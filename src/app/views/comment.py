@@ -1,4 +1,4 @@
-from app.database import engine
+from app.config import engine
 from app.models.comment import Comment
 
 class CommentView:

@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile, File, Form
 from app.models.photo import CreatePhoto
 from app.views.photo import PhotoViews
 
@@ -10,5 +10,7 @@ async def get_all_photos():
 
 
 @router.post("/")
-async def create_photo(photo: CreatePhoto):
-  return await PhotoViews.create_photo(photo)
+async def create_photo(photo_data: str = Form(...), uploaded_file: UploadFile = File(...)):
+  photo = CreatePhoto.model_validate_json(photo_data)
+
+  return await PhotoViews.create_photo(photo, uploaded_file)
