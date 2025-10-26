@@ -19,6 +19,7 @@ class Settings(BaseModel):
 class Photo(Model):
     user_id: ObjectId
     photo_url: str
+    cloudinary_public_id: str  # Store Cloudinary public_id for deletions/updates
     location: Location
     date: datetime
     category: str
@@ -31,6 +32,14 @@ class CreatePhoto(BaseModel):
     location: Location
     date: datetime
     category: str
+    gear: Optional[Gear] = None
+    settings_used: Optional[Settings] = None
+
+
+class UpdatePhoto(BaseModel):
+    location: Optional[Location] = None
+    date: Optional[datetime] = None
+    category: Optional[str] = None
     gear: Optional[Gear] = None
     settings_used: Optional[Settings] = None
 
