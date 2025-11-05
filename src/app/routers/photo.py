@@ -11,6 +11,21 @@ async def get_all_photos():
     return await PhotoViews.get_all_photos() 
 
 
+@router.get("/{photo_id}", response_model=Photo)
+async def get_photo_by_id(photo_id: str):
+    try:
+        object_id = ObjectId(photo_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid photo ID format")
+
+    photo = await PhotoViews.get_photo_by_id(object_id)
+
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+
+    return photo
+
+
 @router.post("/", response_model=Photo)
 async def create_photo(photo_data: str = Form(...), uploaded_file: UploadFile = File(...)):
   photo = CreatePhoto.model_validate_json(photo_data)

@@ -14,8 +14,17 @@ class PhotoViews:
     photos = await engine.find(Photo)
 
     return photos
+
+
+  async def get_photo_by_id(photo_id: ObjectId):
+    """
+    Retrieve a photo by its ID from the database.
+    """
+    photo = await engine.find_one(Photo, Photo.id == photo_id)
+
+    return photo
   
-  
+
   async def create_photo(new_photo: CreatePhoto, uploaded_file:  File):
     """
     Create a new photo entry in the database with image upload to Cloudinary.
@@ -37,6 +46,7 @@ class PhotoViews:
     saved_photo = await engine.save(photo)
 
     return saved_photo
+
 
   async def update_photo(photo_id: ObjectId, update_data: UpdatePhoto):
     """
@@ -63,6 +73,7 @@ class PhotoViews:
     updated_photo = await engine.save(photo)
     
     return updated_photo
+
 
   async def delete_photo(photo_id: ObjectId): 
     """
