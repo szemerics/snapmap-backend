@@ -8,12 +8,18 @@ from typing import Optional
 class PhotoViews:
 
   async def get_all_photos():
+    """
+    Get all photos from the database.
+    """
     photos = await engine.find(Photo)
 
     return photos
   
   
   async def create_photo(new_photo: CreatePhoto, uploaded_file:  File):
+    """
+    Create a new photo entry in the database with image upload to Cloudinary.
+    """
     file_content = await uploaded_file.read()
     upload_result = CloudinaryService.upload_image(file_content, 'snapmap')
 
@@ -33,6 +39,9 @@ class PhotoViews:
     return saved_photo
 
   async def update_photo(photo_id: ObjectId, update_data: UpdatePhoto):
+    """
+    Update photo metadata in the database.
+    """
     photo = await engine.find_one(Photo, Photo.id == photo_id)
     
     if not photo:
@@ -55,7 +64,10 @@ class PhotoViews:
     
     return updated_photo
 
-  async def delete_photo(photo_id: ObjectId):
+  async def delete_photo(photo_id: ObjectId): 
+    """
+    Delete a photo from the database and remove the image from Cloudinary.
+    """
     photo = await engine.find_one(Photo, Photo.id == photo_id)
     
     CloudinaryService.delete_image(photo.cloudinary_public_id)
