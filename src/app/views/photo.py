@@ -3,7 +3,9 @@ from app.models.photo import Photo, CreatePhoto, UpdatePhoto
 from app.utils.images import CloudinaryService
 from fastapi import File
 from odmantic import ObjectId
-from typing import Optional
+from transformers import pipeline
+from PIL import Image
+import io
 
 class PhotoViews:
 
@@ -28,8 +30,24 @@ class PhotoViews:
   async def create_photo(new_photo: CreatePhoto, uploaded_file:  File):
     """
     Create a new photo entry in the database with image upload to Cloudinary.
+    NSFW check is performed using the Falconsai/nsfw_image_detection model from huggingface.
     """
     file_content = await uploaded_file.read()
+
+    # Convert raw bytes to a PIL image for classification
+    try:
+        image = Image.open(io.BytesIO(file_content))
+    except Exception as e:
+        print(f"Error loading image: {e}")
+        raise ValueError("Uploaded file is not a valid image")
+
+    # Use the pipeline with the PIL image
+    pipe = pipeline("image-classification", model="Falconsai/nsfw_image_detection")
+    classifications = pipe(image)
+
+    if (classifications[0]["label"] == "nsfw") and (classifications[0]["score"] > 0.7):
+      raise ValueError("Uploaded image is classified as NSFW")
+
     upload_result = CloudinaryService.upload_image(file_content, 'snapmap')
 
     photo = Photo(
