@@ -10,12 +10,12 @@ class UserView:
     users = await engine.find(User)
 
     return users
+  
 
-
-  async def create_user(user: User):
+  async def get_user_by_email(email: str):
     """
-    Create a new user in the database.
+    Get a user by their email from the database
     """
-    new_user = await engine.save(user)
+    user = await engine.find_one(User, User.email == email)
 
-    return new_user
+    return user
