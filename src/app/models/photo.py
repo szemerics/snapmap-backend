@@ -1,30 +1,42 @@
-from odmantic import Model, EmbeddedModel
+from odmantic import Field, Model
 from datetime import datetime
-from bson import ObjectId
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
-from app.models.user import Gear
+from app.models.user import UserProfile
+from app.models.additional_data import Gear, Settings
 
-class Location(EmbeddedModel):
+class Location(BaseModel):
     lat: float
     lng: float
 
 
-class Settings(BaseModel):
-    iso: int
-    shutter_speed: str
-    aperture: str
+class Comment(BaseModel):
+    user_profile: UserProfile
+    comment_date: datetime
+    content: str
+    likes: int = Field(default=0)
+    replies: Optional[List['Comment']] = None  # Allow nested comments
 
 
 class Photo(Model):
-    user_id: ObjectId
+    # Default data
+    user_profile: UserProfile
     photo_url: str
     cloudinary_public_id: str  # Store Cloudinary public_id for deletions/updates
-    location: Location
-    date: datetime
+
+    location: Optional[Location] = None
+
+    # Metadata
+    date_captured: datetime
     category: str
     gear: Optional[Gear] = None
     settings_used: Optional[Settings] = None
+
+    # Post
+    date_posted: datetime
+    caption: Optional[str] = None
+    likes: int = Field(default=0)
+    comments: Optional[List[Comment]] = Field(default=None)
 
     model_config = {
         "collection": "photos"
@@ -32,12 +44,17 @@ class Photo(Model):
 
 
 class CreatePhoto(BaseModel):
-    user_id: ObjectId
-    location: Location
-    date: datetime
+    location: Optional[Location] = None
+
+    # Metadata
+    date_captured: datetime
     category: str
     gear: Optional[Gear] = None
     settings_used: Optional[Settings] = None
+
+     # Post
+    date_posted: datetime
+    caption: Optional[str] = None
 
     model_config = {
         "arbitrary_types_allowed": True
@@ -46,8 +63,16 @@ class CreatePhoto(BaseModel):
 
 class UpdatePhoto(BaseModel):
     location: Optional[Location] = None
-    date: Optional[datetime] = None
+
+    # Metadata
+    date_captured: Optional[datetime] = None
     category: Optional[str] = None
     gear: Optional[Gear] = None
     settings_used: Optional[Settings] = None
 
+     # Post
+    caption: Optional[str] = None
+
+    model_config = {
+        "arbitrary_types_allowed": True
+    }

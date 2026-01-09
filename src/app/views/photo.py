@@ -1,6 +1,7 @@
+from datetime import datetime
 from app.config import engine
 from app.models.photo import Photo, CreatePhoto, UpdatePhoto
-from app.models.user import User, UserRole
+from app.models.user import User, UserProfile, UserRole
 from app.utils.images import CloudinaryService
 from fastapi import File
 from odmantic import ObjectId
@@ -9,6 +10,17 @@ from PIL import Image
 import io
 
 class PhotoView:
+  async def delete_all_photos():
+    """
+    Delete all photos from the database. For testing purposes only.
+    """
+    photos = await engine.find(Photo)
+
+    for photo in photos:
+      CloudinaryService.delete_image(photo.cloudinary_public_id)
+      await engine.delete(photo)
+
+    return {"message": "All photos deleted successfully"}
 
   async def get_all_photos():
     """
@@ -51,18 +63,33 @@ class PhotoView:
 
     upload_result = CloudinaryService.upload_image(file_content, 'snapmap')
 
+    # upload_result = {
+    #   "secure_url": "https://res.cloudinary.com/demo/image/upload/v1697040000/sample.jpg",
+    #   "public_id": "sample_public_id"
+    # }
+
+    user_profile = UserProfile(
+      username=acting_user.username,
+      profile_picture_url=acting_user.profile_picture_url,
+      bio=acting_user.bio
+    )
+
     photo = Photo(
-        user_id=acting_user.id,
+        user_profile=user_profile,
+        photo_url=str(upload_result["secure_url"]),
+        cloudinary_public_id=str(upload_result["public_id"]),
         location=new_photo.location,
-        date=new_photo.date,
+        date_captured=new_photo.date_captured,
         category=new_photo.category,
         gear=new_photo.gear,
         settings_used=new_photo.settings_used,
-        photo_url=str(upload_result["secure_url"]),
-        cloudinary_public_id=str(upload_result["public_id"])
+        date_posted=datetime.now(),
+        caption=new_photo.caption,
     )
 
     saved_photo = await engine.save(photo)
+    acting_user.photos.append(saved_photo.id)
+    await engine.save(acting_user)
 
     return saved_photo
 

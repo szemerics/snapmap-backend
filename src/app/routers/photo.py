@@ -73,3 +73,8 @@ async def delete_photo(photo_id: str, credentials: HTTPAuthorizationCredentials 
         raise HTTPException(status_code=401, detail=str(e))
     
     return result
+
+
+@router.delete("/")
+async def delete_all_photos():
+    return await PhotoView.delete_all_photos()
