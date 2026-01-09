@@ -1,5 +1,6 @@
 from app.config import engine
 from app.models.photo import Photo, CreatePhoto, UpdatePhoto
+from app.models.user import User, UserRole
 from app.utils.images import CloudinaryService
 from fastapi import File
 from odmantic import ObjectId
@@ -27,7 +28,7 @@ class PhotoView:
     return photo
   
 
-  async def create_photo(new_photo: CreatePhoto, uploaded_file:  File):
+  async def create_photo(new_photo: CreatePhoto, uploaded_file:  File, acting_user: User):
     """
     Create a new photo entry in the database with image upload to Cloudinary.
     NSFW check is performed using the Falconsai/nsfw_image_detection model from huggingface.
@@ -51,7 +52,7 @@ class PhotoView:
     upload_result = CloudinaryService.upload_image(file_content, 'snapmap')
 
     photo = Photo(
-        user_id=new_photo.user_id,
+        user_id=acting_user.id,
         location=new_photo.location,
         date=new_photo.date,
         category=new_photo.category,
@@ -66,14 +67,18 @@ class PhotoView:
     return saved_photo
 
 
-  async def update_photo(photo_id: ObjectId, update_data: UpdatePhoto):
+  async def update_photo(photo_id: ObjectId, update_data: UpdatePhoto, acting_user: User):
     """
     Update photo metadata in the database.
     """
     photo = await engine.find_one(Photo, Photo.id == photo_id)
     
     if not photo:
-      return {"error": "Photo not found"}
+      raise ValueError(f'Photo with id {photo_id} not found')
+    
+    if photo.user_id != acting_user.id:
+      if (acting_user.role == UserRole.USER):
+        raise PermissionError('You have no right to delete this photo')
     
     # Update only the metadata fields that were provided
     if update_data.location is not None:
@@ -93,11 +98,18 @@ class PhotoView:
     return updated_photo
 
 
-  async def delete_photo(photo_id: ObjectId): 
+  async def delete_photo(photo_id: ObjectId, acting_user: User): 
     """
     Delete a photo from the database and remove the image from Cloudinary.
     """
     photo = await engine.find_one(Photo, Photo.id == photo_id)
+
+    if not photo:
+      raise ValueError(f'Photo with id {photo_id} not found')
+
+    if photo.user_id != acting_user.id:
+      if (acting_user.role == UserRole.USER):
+        raise PermissionError('You have no permission to delete this photo')
     
     CloudinaryService.delete_image(photo.cloudinary_public_id)
     

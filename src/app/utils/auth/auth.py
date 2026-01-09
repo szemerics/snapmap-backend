@@ -63,7 +63,7 @@ async def get_current_user(token: str):
   except Exception:
     raise ValueError("Could not validate credentials")
 
-  user = await UserView.get_user_by_email(token_data.email)
+  user: User = await UserView.get_user_by_email(token_data.email)
 
   return user
 

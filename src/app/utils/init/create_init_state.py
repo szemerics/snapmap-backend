@@ -110,12 +110,14 @@ async def __upload_photos(default_user: User, moderator_user: User, admin_user: 
       if is_existing_photo:
           print(f"Photo {photo.file_path} already exists, skipping...")
           continue
+      
+      user_to_upload = await engine.find_one(User, (User.id == photo.data.user_id))
 
       file_path = photo.file_path
       with open(file_path, 'rb') as f:
           file_content = f.read()
           upload_file = UploadFile(file=io.BytesIO(file_content))
-          await PhotoView.create_photo(photo.data, upload_file)
+          await PhotoView.create_photo(photo.data, upload_file, user_to_upload)
         
 
 
