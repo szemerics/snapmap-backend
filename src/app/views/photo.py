@@ -69,6 +69,7 @@ class PhotoView:
     # }
 
     user_profile = UserProfile(
+      user_id=acting_user.id,
       username=acting_user.username,
       profile_picture_url=acting_user.profile_picture_url,
       bio=acting_user.bio
@@ -103,21 +104,23 @@ class PhotoView:
     if not photo:
       raise ValueError(f'Photo with id {photo_id} not found')
     
-    if photo.user_id != acting_user.id:
+    if photo.user_profile.user_id != acting_user.id:
       if (acting_user.role == UserRole.USER):
         raise PermissionError('You have no right to delete this photo')
     
     # Update only the metadata fields that were provided
     if update_data.location is not None:
       photo.location = update_data.location
-    if update_data.date is not None:
-      photo.date = update_data.date
     if update_data.category is not None:
       photo.category = update_data.category
     if update_data.gear is not None:
       photo.gear = update_data.gear
     if update_data.settings_used is not None:
       photo.settings_used = update_data.settings_used
+    if update_data.caption is not None:
+      photo.caption = update_data.caption
+    if update_data.date_captured is not None:
+      photo.date_captured = update_data.date_captured
     
     # Save the updated photo
     updated_photo = await engine.save(photo)
@@ -134,7 +137,7 @@ class PhotoView:
     if not photo:
       raise ValueError(f'Photo with id {photo_id} not found')
 
-    if photo.user_id != acting_user.id:
+    if photo.user_profile.user_id != acting_user.id:
       if (acting_user.role == UserRole.USER):
         raise PermissionError('You have no permission to delete this photo')
     

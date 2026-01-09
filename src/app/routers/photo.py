@@ -40,14 +40,17 @@ async def create_photo(photo_data: str = Form(...), uploaded_file: UploadFile = 
 
 
 @router.put("/{photo_id}", response_model=Photo)
-async def update_photo(photo_id: str, photo_data: str = Form(...)):
+async def update_photo(photo_id: str, photo_data: str = Form(...), credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    acting_user = await auth.get_current_user(token)
+
     try:
         object_id = ObjectId(photo_id)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid photo ID format")
     
     update_data = UpdatePhoto.model_validate_json(photo_data)
-    result = await PhotoView.update_photo(object_id, update_data)
+    result = await PhotoView.update_photo(object_id, update_data, acting_user)
     
     if isinstance(result, dict) and "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])

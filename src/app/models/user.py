@@ -31,6 +31,7 @@ class User(Model):
 
 
 class UserProfile(EmbeddedModel):
+     user_id: ObjectId
      username: str = Field(min_length=3, unique=True)
      profile_picture_url: Optional[str] = None
      bio: Optional[str] = None

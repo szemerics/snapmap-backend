@@ -49,6 +49,7 @@ async def __upload_photos(default_user: User, moderator_user: User, admin_user: 
       
       user_to_upload = await engine.find_one(User, (User.id == photo_entry.user_id))
 
+      print(f'Uploading photo from {photo_entry.file_path}')
       file_path = photo_entry.file_path
       with open(file_path, 'rb') as f:
           file_content = f.read()
