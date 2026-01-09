@@ -7,7 +7,7 @@ from transformers import pipeline
 from PIL import Image
 import io
 
-class PhotoViews:
+class PhotoView:
 
   async def get_all_photos():
     """

@@ -24,7 +24,7 @@ async def login_auth(email: str, password: str):
 
   access_token_expires = timedelta(minutes=1440)
   access_token = await __create_access_token(
-      data={"email": user.email}, expires_delta=access_token_expires
+      data={"email": user.email, "role": user.role}, expires_delta=access_token_expires
   )
 
   return Token(access_token=access_token, token_type="bearer")
@@ -53,11 +53,13 @@ async def get_current_user(token: str):
   try:
     payload = jwt.decode(token, __secret_key, algorithms=__algorithm)
     email = payload.get('email')
+    role = payload.get('role')
 
     if email is None:
       raise ValueError
     
-    token_data = TokenData(email=email)
+    token_data = TokenData(email=email, role=role)
+
   except Exception:
     raise ValueError("Could not validate credentials")
 

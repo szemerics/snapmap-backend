@@ -26,14 +26,22 @@ class Photo(Model):
     gear: Optional[Gear] = None
     settings_used: Optional[Settings] = None
 
+    model_config = {
+        "collection": "photos"
+    }
+
 
 class CreatePhoto(BaseModel):
-    user_id: str
+    user_id: ObjectId
     location: Location
     date: datetime
     category: str
     gear: Optional[Gear] = None
     settings_used: Optional[Settings] = None
+
+    model_config = {
+        "arbitrary_types_allowed": True
+    }
 
 
 class UpdatePhoto(BaseModel):
