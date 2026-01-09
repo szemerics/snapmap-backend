@@ -53,7 +53,6 @@ class CreatePhoto(BaseModel):
     settings_used: Optional[Settings] = None
 
      # Post
-    date_posted: datetime
     caption: Optional[str] = None
 
     model_config = {

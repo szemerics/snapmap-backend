@@ -5,9 +5,10 @@ from app.models.user import User, UserProfile, UserRole
 from app.utils.images import CloudinaryService
 from fastapi import File
 from odmantic import ObjectId
-from transformers import pipeline
 from PIL import Image
 import io
+from app.utils.nsfw_model import nsfw_pipeline
+
 
 class PhotoView:
   async def delete_all_photos():
@@ -21,6 +22,7 @@ class PhotoView:
       await engine.delete(photo)
 
     return {"message": "All photos deleted successfully"}
+
 
   async def get_all_photos():
     """
@@ -54,11 +56,9 @@ class PhotoView:
         print(f"Error loading image: {e}")
         raise ValueError("Uploaded file is not a valid image")
 
-    # Use the pipeline with the PIL image
-    pipe = pipeline("image-classification", model="Falconsai/nsfw_image_detection")
-    classifications = pipe(image)
+    classifications = nsfw_pipeline(image)
 
-    if (classifications[0]["label"] == "nsfw") and (classifications[0]["score"] > 0.7):
+    if (classifications[0]["label"].lower() == "nsfw") and (classifications[0]["score"] > 0.7):
       raise ValueError("Uploaded image is classified as NSFW")
 
     upload_result = CloudinaryService.upload_image(file_content, 'snapmap')
