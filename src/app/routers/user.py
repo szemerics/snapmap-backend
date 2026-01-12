@@ -8,19 +8,19 @@ router = APIRouter()
 security = HTTPBearer()
 
 
-@router.get("/")
+@router.get("/", tags=["User"])
 async def get_all_users():
     return await UserView.get_all_users()
 
 
-@router.get("/me")
+@router.get("/me", tags=["User"])
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user = await auth.get_current_user(token)
     return user
 
 
-@router.put("/set-role")
+@router.put("/set-role", tags=["Admin"])
 async def set_user_role(target_user_id: str, role: UserRole , credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     acting_user = await auth.get_current_user(token)

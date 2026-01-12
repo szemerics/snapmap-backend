@@ -2,7 +2,7 @@ from odmantic import Field, Model
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel
-from app.models.user import UserProfile
+from app.models.user import UserSummary
 from app.models.additional_data import Gear, Settings
 
 class Location(BaseModel):
@@ -11,7 +11,7 @@ class Location(BaseModel):
 
 
 class Comment(BaseModel):
-    user_profile: UserProfile
+    user_summary: UserSummary
     comment_date: datetime
     content: str
     likes: int = Field(default=0)
@@ -20,7 +20,7 @@ class Comment(BaseModel):
 
 class Photo(Model):
     # Default data
-    user_profile: UserProfile
+    user_summary: UserSummary
     photo_url: str
     cloudinary_public_id: str  # Store Cloudinary public_id for deletions/updates
 

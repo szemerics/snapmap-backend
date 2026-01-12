@@ -1,7 +1,7 @@
 from datetime import datetime
 from app.config import engine
 from app.models.photo import Photo, CreatePhoto, UpdatePhoto
-from app.models.user import User, UserProfile, UserRole
+from app.models.user import User, UserSummary, UserRole
 from app.utils.images import CloudinaryService
 from fastapi import File
 from odmantic import ObjectId
@@ -68,7 +68,7 @@ class PhotoView:
     #   "public_id": "sample_public_id"
     # }
 
-    user_profile = UserProfile(
+    user_summary = UserSummary(
       user_id=acting_user.id,
       username=acting_user.username,
       profile_picture_url=acting_user.profile_picture_url,
@@ -76,7 +76,7 @@ class PhotoView:
     )
 
     photo = Photo(
-        user_profile=user_profile,
+        user_summary=user_summary,
         photo_url=str(upload_result["secure_url"]),
         cloudinary_public_id=str(upload_result["public_id"]),
         location=new_photo.location,
@@ -104,7 +104,7 @@ class PhotoView:
     if not photo:
       raise ValueError(f'Photo with id {photo_id} not found')
     
-    if photo.user_profile.user_id != acting_user.id:
+    if photo.user_summary.user_id != acting_user.id:
       if (acting_user.role == UserRole.USER):
         raise PermissionError('You have no right to delete this photo')
     
@@ -137,7 +137,7 @@ class PhotoView:
     if not photo:
       raise ValueError(f'Photo with id {photo_id} not found')
 
-    if photo.user_profile.user_id != acting_user.id:
+    if photo.user_summary.user_id != acting_user.id:
       if (acting_user.role == UserRole.USER):
         raise PermissionError('You have no permission to delete this photo')
     

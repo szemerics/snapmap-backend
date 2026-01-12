@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers.photo import router as map_router
 from app.routers.user import router as user_router
 from app.routers.auth import router as auth_router
+from app.routers.report import router as report_router
 from app.config import configure_cloudinary
 
 app = FastAPI()
@@ -18,5 +19,6 @@ app.add_middleware(
 )
 
 app.include_router(auth_router, prefix='/api/auth', tags=['Auth'])
-app.include_router(map_router, prefix='/api/photos', tags=['Photos'])
-app.include_router(user_router, prefix='/api/users', tags=['User'])
+app.include_router(map_router, prefix='/api/photos')
+app.include_router(user_router, prefix='/api/users')
+app.include_router(report_router, prefix='/api/reports')
