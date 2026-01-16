@@ -8,7 +8,7 @@ router = APIRouter()
 async def login_for_access_token(email: str, password: str):
     token = await auth.login_auth(email, password)
     if not token:
-        return {"error": "Invalid email or password"}
+        raise HTTPException(status_code=401, detail='Invalid credentials')
     return token
 
 

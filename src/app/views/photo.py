@@ -8,6 +8,7 @@ from odmantic import ObjectId
 from PIL import Image
 import io
 from app.utils.nsfw_model import nsfw_pipeline
+from app.models.user import PhotoSummary
 
 
 class PhotoView:
@@ -42,7 +43,16 @@ class PhotoView:
     return photo
   
 
-  async def create_photo(new_photo: CreatePhoto, uploaded_file:  File, acting_user: User):
+  async def get_photos_by_user(user_id: ObjectId):
+    """
+    Retrieve all photos posted by a specific user.
+    """
+    photos = await engine.find(Photo, Photo.user_summary.user_id == user_id)
+
+    return photos
+  
+
+  async def create_photo(new_photo: CreatePhoto, uploaded_file: File, acting_user: User):
     """
     Create a new photo entry in the database with image upload to Cloudinary.
     NSFW check is performed using the Falconsai/nsfw_image_detection model from huggingface.
@@ -89,7 +99,7 @@ class PhotoView:
     )
 
     saved_photo = await engine.save(photo)
-    acting_user.photos.append(saved_photo.id)
+    acting_user.photo_summaries.append(PhotoSummary(photo_id=saved_photo.id, photo_url=saved_photo.photo_url))
     await engine.save(acting_user)
 
     return saved_photo
@@ -142,6 +152,9 @@ class PhotoView:
         raise PermissionError('You have no permission to delete this photo')
     
     CloudinaryService.delete_image(photo.cloudinary_public_id)
+    
+    acting_user.photo_summaries = [p for p in acting_user.photo_summaries if p.photo_id != photo_id]
+    await engine.save(acting_user)
     
     await engine.delete(photo)
     

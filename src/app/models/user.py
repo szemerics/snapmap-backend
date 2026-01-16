@@ -8,6 +8,11 @@ from enum import Enum
 from app.models.additional_data import Gear
 
 
+class PhotoSummary(EmbeddedModel):
+    photo_id: ObjectId
+    photo_url: str
+
+
 class UserRole(str, Enum):
     USER = 'user'
     MODERATOR = 'moderator'
@@ -23,7 +28,7 @@ class User(Model):
     profile_picture_url: Optional[str] = None
     bio: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
-    photos: List[ObjectId] = Field(default_factory=list)
+    photo_summaries: List[PhotoSummary] = Field(default_factory=list)
 
     model_config = {
         "collection": "users"
