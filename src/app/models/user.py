@@ -25,7 +25,7 @@ class User(Model):
     password_hash: str
     role: UserRole = Field(default=UserRole.USER)
     gears: Optional[List[Gear]] = None
-    profile_picture_url: Optional[str] = None
+    profile_picture_url: str = Field(default="https://res.cloudinary.com/dyhnln455/image/upload/v1768567454/default-pfp_mddc8x.svg")
     bio: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
     photo_summaries: List[PhotoSummary] = Field(default_factory=list)
@@ -38,7 +38,7 @@ class User(Model):
 class UserSummary(EmbeddedModel):
      user_id: ObjectId
      username: str = Field(min_length=3, unique=True)
-     profile_picture_url: Optional[str] = None
+     profile_picture_url: str = Field(default="https://res.cloudinary.com/dyhnln455/image/upload/v1768567454/default-pfp_mddc8x.svg")
      bio: Optional[str] = None
 
 

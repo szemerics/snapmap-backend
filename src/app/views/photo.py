@@ -43,11 +43,11 @@ class PhotoView:
     return photo
   
 
-  async def get_photos_by_user(user_id: ObjectId):
+  async def get_photos_by_user(username: str):
     """
     Retrieve all photos posted by a specific user.
     """
-    photos = await engine.find(Photo, Photo.user_summary.user_id == user_id)
+    photos = await engine.find(Photo, Photo.user_summary.username == username)
 
     return photos
   

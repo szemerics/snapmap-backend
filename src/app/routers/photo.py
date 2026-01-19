@@ -15,13 +15,13 @@ async def get_all_photos():
 
 
 @router.get("/user-photos", response_model=list[Photo], tags=["Photos"])
-async def get_photos_by_user(user_id: Optional[ObjectId] = None, credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
-    if user_id is None:
+async def get_photos_by_user(username: Optional[str] = None, credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
+    if username is None:
         token = credentials.credentials
         acting_user = await auth.get_current_user(token)
-        user_id = acting_user.id
-
-    photos = await PhotoView.get_photos_by_user(user_id)
+        username = acting_user.username
+        
+    photos = await PhotoView.get_photos_by_user(username)
 
     if not photos:
         raise HTTPException(status_code=404, detail="No photos found for this user")

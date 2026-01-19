@@ -22,6 +22,14 @@ class UserView:
     return user
   
 
+  async def get_user_by_username(username: str):
+    """
+    Get a user by their username from the database
+    """
+    user = await engine.find_one(User, User.username == username)
+    return user
+  
+
   async def set_role(target_user_id: str, role: UserRole, acting_user: User):
     if acting_user.role != UserRole.ADMIN:
       raise PermissionError("You have no permission to change user roles.")

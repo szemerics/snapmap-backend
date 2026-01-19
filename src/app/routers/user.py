@@ -20,6 +20,14 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     return user
 
 
+@router.get("/{username}", tags=["User"])
+async def get_user_by_username(username: str):
+    user =  await UserView.get_user_by_username(username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
 @router.put("/set-role", tags=["Admin"])
 async def set_user_role(target_user_id: str, role: UserRole , credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
