@@ -5,38 +5,18 @@ from app.utils.auth import auth
 from app.views.photo import PhotoView
 from odmantic import ObjectId
 from typing import Optional
+from enum import Enum
+
+class PhotoTypeFilter(str, Enum):
+    post = "post"
+    map = "map"
 
 router = APIRouter()
 security = HTTPBearer()
 
 @router.get("/", tags=["Photos"])
-async def get_all_photos():
-    return await PhotoView.get_all_photos() 
-
-
-@router.get("/user-photos", response_model=list[Photo], tags=["Photos"])
-async def get_photos_by_user(username: Optional[str] = None, credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
-    if username is None:
-        token = credentials.credentials
-        acting_user = await auth.get_current_user(token)
-        username = acting_user.username
-        
-    photos = await PhotoView.get_photos_by_user(username)
-
-    if not photos:
-        raise HTTPException(status_code=404, detail="No photos found for this user")
-
-    return photos
-
-
-@router.get("/{photo_id}", response_model=Photo, tags=["Photos"])
-async def get_photo_by_id(photo_id: ObjectId):
-    photo = await PhotoView.get_photo_by_id(photo_id)
-
-    if not photo:
-        raise HTTPException(status_code=404, detail="Photo not found")
-
-    return photo
+async def get_photos(photo_type: Optional[PhotoTypeFilter] = None, username: Optional[str] = None, photo_id: Optional[ObjectId] = None):
+    return await PhotoView.get_photos(photo_type.value if photo_type else None, username, photo_id) 
 
 
 @router.post("/", response_model=Photo, tags=["Photos"])

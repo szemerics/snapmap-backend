@@ -25,32 +25,33 @@ class PhotoView:
     return {"message": "All photos deleted successfully"}
 
 
-  async def get_all_photos():
+  async def get_photos(photo_type: str = None, username: str = None, photo_id: ObjectId = None):
     """
-    Get all photos from the database.
+    Get photos from the database with optional filters.
+    Args:
+        photo_type: Filter by photo type - 'post' (no location), 'map' (with location), or None (all)
+        username: Filter by user
+        photo_id: Filter by specific photo ID
     """
-    photos = await engine.find(Photo)
+    query = []
+    
+    if photo_type == 'post':
+      query.append(Photo.location == None)
+    elif photo_type == 'map':
+      query.append(Photo.location != None)
+    
+    if username:
+      query.append(Photo.user_summary.username == username)
+    if photo_id:
+      query.append(Photo.id == photo_id)
+    
+    if query:
+      photos = await engine.find(Photo, *query)
+    else:
+      photos = await engine.find(Photo)
 
     return photos
 
-
-  async def get_photo_by_id(photo_id: ObjectId):
-    """
-    Retrieve a photo by its ID from the database.
-    """
-    photo = await engine.find_one(Photo, Photo.id == photo_id)
-
-    return photo
-  
-
-  async def get_photos_by_user(username: str):
-    """
-    Retrieve all photos posted by a specific user.
-    """
-    photos = await engine.find(Photo, Photo.user_summary.username == username)
-
-    return photos
-  
 
   async def create_photo(new_photo: CreatePhoto, uploaded_file: File, acting_user: User):
     """
@@ -72,11 +73,6 @@ class PhotoView:
       raise ValueError("Uploaded image is classified as NSFW")
 
     upload_result = CloudinaryService.upload_image(file_content, 'snapmap')
-
-    # upload_result = {
-    #   "secure_url": "https://res.cloudinary.com/demo/image/upload/v1697040000/sample.jpg",
-    #   "public_id": "sample_public_id"
-    # }
 
     user_summary = UserSummary(
       user_id=acting_user.id,

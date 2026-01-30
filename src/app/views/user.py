@@ -1,36 +1,28 @@
+from typing import Optional
 from app.config import engine
 from app.models.user import User, UserRole
 from odmantic import ObjectId
 
 class UserView:
 
-  async def get_all_users():
+  async def get_users(username: Optional[str] = None, email: Optional[str] = None):
     """
-    Get all users from the database.
+    Get users from the database with optional filtering by username or email.
     """
-    users = await engine.find(User)
+    if email:
+      users = await engine.find(User, User.email == email)
+    elif username:
+      users = await engine.find(User, User.username == username)
+    else:
+      users = await engine.find(User)
 
     return users
   
 
-  async def get_user_by_email(email: str):
-    """
-    Get a user by their email from the database
-    """
-    user = await engine.find_one(User, User.email == email)
-
-    return user
-  
-
-  async def get_user_by_username(username: str):
-    """
-    Get a user by their username from the database
-    """
-    user = await engine.find_one(User, User.username == username)
-    return user
-  
-
   async def set_role(target_user_id: str, role: UserRole, acting_user: User):
+    """
+    Set the role of a target user.
+    """
     if acting_user.role != UserRole.ADMIN:
       raise PermissionError("You have no permission to change user roles.")
 

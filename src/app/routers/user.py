@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.views.user import UserView
@@ -9,22 +10,17 @@ security = HTTPBearer()
 
 
 @router.get("/", tags=["User"])
-async def get_all_users():
-    return await UserView.get_all_users()
+async def get_users(username: Optional[str] = None, email: Optional[str] = None,):
+    user = await UserView.get_users(username=username, email=email)
+    if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+    return user
 
 
 @router.get("/me", tags=["User"])
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
-    user = await auth.get_current_user(token)
-    return user
-
-
-@router.get("/{username}", tags=["User"])
-async def get_user_by_username(username: str):
-    user =  await UserView.get_user_by_username(username)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    user = (await auth.get_current_user(token))[0]
     return user
 
 

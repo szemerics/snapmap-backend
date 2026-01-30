@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException
-from app.models.user import UserRegister
+from app.models.user import UserLogin, UserRegister
 from app.utils.auth import auth
 
 router = APIRouter()
 
 @router.post("/login")
-async def login_for_access_token(email: str, password: str):
-    token = await auth.login_auth(email, password)
+async def login_for_access_token(user_data: UserLogin):
+    token = await auth.login_auth(user_data)
     if not token:
         raise HTTPException(status_code=401, detail='Invalid credentials')
     return token

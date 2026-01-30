@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from bcrypt import checkpw, hashpw, gensalt
-from app.models.user import UserRegister, User
+from app.models.user import UserLogin, UserRegister, User
 from app.utils.auth.token import TokenData
 from app.views.user import UserView
 from datetime import timedelta, datetime
@@ -16,8 +16,8 @@ __secret_key = os.getenv('JWT_SECRET_KEY')
 __algorithm = 'HS256'
 
 
-async def login_auth(email: str, password: str):
-  user = await __authenticate_user(email, password)
+async def login_auth(user_data: UserLogin):
+  user = await __authenticate_user(user_data.email, user_data.password)
 
   if not user:
     return None
@@ -63,7 +63,7 @@ async def get_current_user(token: str):
   except Exception:
     raise ValueError("Could not validate credentials")
 
-  user: User = await UserView.get_user_by_email(token_data.email)
+  user: User = await UserView.get_users(email=token_data.email)
 
   return user
 
@@ -81,7 +81,7 @@ async def __create_access_token(data: dict, expires_delta: timedelta | None = No
 
 
 async def __authenticate_user(email: str, password: str):
-  user = await UserView.get_user_by_email(email)
+  user = (await UserView.get_users(email=email))[0]
 
   if not user:
     return False
