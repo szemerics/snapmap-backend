@@ -12,17 +12,17 @@ from app.models.user import PhotoSummary
 
 
 class PhotoView:
-  async def delete_all_photos():
-    """
-    Delete all photos from the database. For testing purposes only.
-    """
-    photos = await engine.find(Photo)
+  # async def delete_all_photos():
+  #   """
+  #   Delete all photos from the database. For testing purposes only.
+  #   """
+  #   photos = await engine.find(Photo)
 
-    for photo in photos:
-      CloudinaryService.delete_image(photo.cloudinary_public_id)
-      await engine.delete(photo)
+  #   for photo in photos:
+  #     CloudinaryService.delete_image(photo.cloudinary_public_id)
+  #     await engine.delete(photo)
 
-    return {"message": "All photos deleted successfully"}
+  #   return {"message": "All photos deleted successfully"}
 
 
   async def get_photos(photo_type: str = None, username: str = None, photo_id: ObjectId = None):
@@ -142,15 +142,19 @@ class PhotoView:
 
     if not photo:
       raise ValueError(f'Photo with id {photo_id} not found')
+    
+    target_user = acting_user
 
     if photo.user_summary.user_id != acting_user.id:
       if (acting_user.role == UserRole.USER):
         raise PermissionError('You have no permission to delete this photo')
+      
+      target_user = await engine.find_one(User, User.id == photo.user_summary.user_id)
     
     CloudinaryService.delete_image(photo.cloudinary_public_id)
     
-    acting_user.photo_summaries = [p for p in acting_user.photo_summaries if p.photo_id != photo_id]
-    await engine.save(acting_user)
+    target_user.photo_summaries = [p for p in target_user.photo_summaries if p.photo_id != photo_id]
+    await engine.save(target_user)
     
     await engine.delete(photo)
     

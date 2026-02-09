@@ -26,7 +26,7 @@ async def create_photo(photo_data: str = Form(...), uploaded_file: UploadFile = 
 
   photo = CreatePhoto.model_validate_json(photo_data)
 
-  return await PhotoView.create_photo(photo, uploaded_file, acting_user)
+  return await PhotoView.create_photo(photo, uploaded_file, acting_user[0])
 
 
 @router.put("/{photo_id}", response_model=Photo, tags=["Photos"])
@@ -35,7 +35,7 @@ async def update_photo(photo_id: ObjectId, photo_data: UpdatePhoto, credentials:
     acting_user = await auth.get_current_user(token)
 
     try:
-        result = await PhotoView.update_photo(photo_id, photo_data, acting_user)
+        result = await PhotoView.update_photo(photo_id, photo_data, acting_user[0])
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except PermissionError as e:
@@ -50,7 +50,7 @@ async def delete_photo(photo_id: ObjectId, credentials: HTTPAuthorizationCredent
     acting_user = await auth.get_current_user(token)
     
     try:
-        result = await PhotoView.delete_photo(photo_id, acting_user)
+        result = await PhotoView.delete_photo(photo_id, acting_user[0])
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except PermissionError as e:
@@ -59,6 +59,6 @@ async def delete_photo(photo_id: ObjectId, credentials: HTTPAuthorizationCredent
     return result
 
 
-@router.delete("/", tags=["Admin"])
-async def delete_all_photos():
-    return await PhotoView.delete_all_photos()
+# @router.delete("/", tags=["Admin"])
+# async def delete_all_photos():
+#     return await PhotoView.delete_all_photos()
