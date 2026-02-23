@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from app.config import engine
 from app.models.photo import Photo, CreatePhoto, UpdatePhoto
 from app.models.user import User, UserSummary, UserRole
@@ -53,10 +54,11 @@ class PhotoView:
     return photos
 
 
-  async def create_photo(new_photo: CreatePhoto, uploaded_file: File, acting_user: User):
+  async def create_photo(new_photo: CreatePhoto, uploaded_file: File, acting_user: User, init_public_id: Optional[str] = None):
     """
     Create a new photo entry in the database with image upload to Cloudinary.
     NSFW check is performed using the Falconsai/nsfw_image_detection model from huggingface.
+    # init_public_id sets a fixed public ID for test uploads
     """
     file_content = await uploaded_file.read()
 
@@ -72,7 +74,7 @@ class PhotoView:
     if (classifications[0]["label"].lower() == "nsfw") and (classifications[0]["score"] > 0.7):
       raise ValueError("Uploaded image is classified as NSFW")
 
-    upload_result = CloudinaryService.upload_image(file_content, 'snapmap')
+    upload_result = CloudinaryService.upload_image(file_content, 'snapmap', public_id=init_public_id)
 
     user_summary = UserSummary(
       user_id=acting_user.id,

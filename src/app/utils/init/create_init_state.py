@@ -37,24 +37,20 @@ async def __upload_photos(default_user: User, moderator_user: User, admin_user: 
     to_upload_photos: List[PhotoEntry] = get_photo_entries(default_user, moderator_user, admin_user)
 
     for photo_entry in to_upload_photos:
-      query = {
-          "location.lat": photo_entry.data.location.lat,
-          "location.lng": photo_entry.data.location.lng,
-      }
-      is_existing_photo = await engine.find_one(Photo, query) is not None
+      user_to_upload = await engine.find_one(User, (User.id == photo_entry.user_id))
+      init_public_id_full = f"snapmap/init-{photo_entry.init_id}-{user_to_upload.username}"
+      is_existing_photo = await engine.find_one(Photo, Photo.cloudinary_public_id == init_public_id_full) is not None
 
       if is_existing_photo:
           print(f"Photo {photo_entry.file_path} already exists, skipping...")
           continue
-      
-      user_to_upload = await engine.find_one(User, (User.id == photo_entry.user_id))
 
       print(f'Uploading photo from {photo_entry.file_path}')
       file_path = photo_entry.file_path
       with open(file_path, 'rb') as f:
           file_content = f.read()
           upload_file = UploadFile(file=io.BytesIO(file_content))
-          created_photo = await PhotoView.create_photo(photo_entry.data, upload_file, user_to_upload)
+          created_photo = await PhotoView.create_photo(photo_entry.data, upload_file, user_to_upload, init_public_id=f"init-{photo_entry.init_id}-{user_to_upload.username}")
           
           # Set likes and comments after photo creation
           await __set_photo_metadata(created_photo, photo_entry)

@@ -4,18 +4,18 @@ from pydantic import BaseModel
 
 
 class Camera(BaseModel):
-    brand: str
-    model: str
-    type: str 
+    brand: Optional[str] = None
+    model: Optional[str] = None
+    type: Optional[str] = None
 
 
 class Gear(BaseModel):
-    camera: Camera
-    lens: str
+    camera: Optional[Camera] = None
+    lens: Optional[str] = None
     extra_attachment: Optional[str] = None
 
 
 class Settings(BaseModel):
-    iso: int
-    shutter_speed: str
-    aperture: str
+    iso: Optional[int] = None
+    shutter_speed: Optional[str] = None
+    aperture: Optional[str] = None
