@@ -1,13 +1,29 @@
-from typing import Optional
+from typing import Optional, List
 from fastapi import File
 from app.config import engine
 from app.models.user import User, UserRole, UserUpdate, ProfilePicture
+from app.models.photo import Photo
 from odmantic import ObjectId
 
 from app.utils.images import CloudinaryService
 
 
 class UserView:
+
+  @staticmethod
+  async def _update_user_summaries(user: User):
+    """
+    Update all photo documents to match the user's latest info.
+    """
+    photos: List[Photo] = await engine.find(Photo, Photo.user_summary.user_id == user.id)
+
+    for photo in photos:
+      photo.user_summary.username = user.username
+      photo.user_summary.profile_picture = user.profile_picture
+      photo.user_summary.bio = user.bio
+
+      await engine.save(photo)
+
 
   async def get_users(username: Optional[str] = None, email: Optional[str] = None):
     """
@@ -67,6 +83,9 @@ class UserView:
     )
 
     await engine.save(user)
+
+    await UserView._update_user_summaries(user)
+
     return user
 
 
@@ -87,4 +106,7 @@ class UserView:
       user.bio = update_data.bio
 
     await engine.save(user)
+
+    await UserView._update_user_summaries(user)
+
     return user
