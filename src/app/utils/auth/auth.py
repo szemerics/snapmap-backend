@@ -1,6 +1,8 @@
 import os
 from dotenv import load_dotenv
 from bcrypt import checkpw, hashpw, gensalt
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.models.user import UserLogin, UserRegister, User
 from app.utils.auth.token import TokenData
 from app.views.user import UserView
@@ -15,6 +17,7 @@ load_dotenv()
 __secret_key = os.getenv('JWT_SECRET_KEY')
 __algorithm = 'HS256'
 
+security = HTTPBearer()
 
 async def login_auth(user_data: UserLogin):
   user = await __authenticate_user(user_data.email, user_data.password)
@@ -49,21 +52,23 @@ async def register_auth(user_data: UserRegister):
   return new_user
 
 
-async def get_current_user(token: str):
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+  token = credentials.credentials
+
   try:
     payload = jwt.decode(token, __secret_key, algorithms=__algorithm)
     email = payload.get('email')
     role = payload.get('role')
-
-    if email is None:
-      raise ValueError
     
     token_data = TokenData(email=email, role=role)
 
-  except Exception:
-    raise ValueError("Could not validate credentials")
+  except ValueError as e:
+    raise HTTPException(status_code=401, detail=str(e))
 
-  user: User = await UserView.get_users(email=token_data.email)
+  except Exception as e:
+    raise HTTPException(status_code=500, detail=str(e))
+
+  user: User = (await UserView.get_users(email=token_data.email))[0]
 
   return user
 

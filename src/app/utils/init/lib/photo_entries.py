@@ -52,7 +52,7 @@ def get_photo_entries(default_user, moderator_user, admin_user) -> List[PhotoEnt
             user_summary=UserSummary(
                 user_id=moderator_user.id,
                 username=moderator_user.username,
-                profile_picture_url=moderator_user.profile_picture_url,
+                profile_picture=moderator_user.profile_picture,
                 bio=moderator_user.bio
             ),
             comment_date=datetime.now(),
@@ -62,7 +62,7 @@ def get_photo_entries(default_user, moderator_user, admin_user) -> List[PhotoEnt
                 user_summary=UserSummary(
                     user_id=default_user.id,
                     username=default_user.username,
-                    profile_picture_url=default_user.profile_picture_url,
+                    profile_picture=default_user.profile_picture,
                     bio=default_user.bio
                 ),
                 comment_date=datetime.now(),
@@ -104,7 +104,7 @@ def get_photo_entries(default_user, moderator_user, admin_user) -> List[PhotoEnt
             user_summary=UserSummary(
                 user_id=admin_user.id,
                 username=admin_user.username,
-                profile_picture_url=admin_user.profile_picture_url,
+                profile_picture=admin_user.profile_picture,
                 bio=admin_user.bio
             ),
             comment_date=datetime.now(),
@@ -171,7 +171,7 @@ def get_photo_entries(default_user, moderator_user, admin_user) -> List[PhotoEnt
                 user_summary=UserSummary(
                     user_id=moderator_user.id,
                     username=moderator_user.username,
-                    profile_picture_url=moderator_user.profile_picture_url,
+                    profile_picture=moderator_user.profile_picture,
                     bio=moderator_user.bio
                 ),
                 comment_date=datetime.now(),
@@ -182,7 +182,7 @@ def get_photo_entries(default_user, moderator_user, admin_user) -> List[PhotoEnt
                         user_summary=UserSummary(
                             user_id=admin_user.id,
                             username=admin_user.username,
-                            profile_picture_url=admin_user.profile_picture_url,
+                            profile_picture=admin_user.profile_picture,
                             bio=admin_user.bio
                         ),
                         comment_date=datetime.now(),
@@ -195,7 +195,7 @@ def get_photo_entries(default_user, moderator_user, admin_user) -> List[PhotoEnt
                 user_summary=UserSummary(
                     user_id=default_user.id,
                     username=default_user.username,
-                    profile_picture_url=default_user.profile_picture_url,
+                    profile_picture=default_user.profile_picture,
                     bio=default_user.bio
                 ),
                 comment_date=datetime.now(),

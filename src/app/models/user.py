@@ -13,6 +13,17 @@ class PhotoSummary(EmbeddedModel):
     photo_url: str
 
 
+class ProfilePicture(EmbeddedModel):
+    url: str
+    public_id: str
+
+
+DEFAULT_PROFILE_PICTURE = ProfilePicture(
+    url="https://res.cloudinary.com/dyhnln455/image/upload/v1771849294/Default_pfp_oe2fst.svg",
+    public_id="default-pfp",
+)
+
+
 class UserRole(str, Enum):
     USER = 'user'
     MODERATOR = 'moderator'
@@ -25,7 +36,7 @@ class User(Model):
     password_hash: str
     role: UserRole = Field(default=UserRole.USER)
     gears: Optional[List[Gear]] = None
-    profile_picture_url: str = Field(default="https://res.cloudinary.com/dyhnln455/image/upload/v1771849294/Default_pfp_oe2fst.svg")
+    profile_picture: ProfilePicture = Field(default=DEFAULT_PROFILE_PICTURE)
     bio: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
     photo_summaries: List[PhotoSummary] = Field(default_factory=list)
@@ -38,7 +49,7 @@ class User(Model):
 class UserSummary(EmbeddedModel):
      user_id: ObjectId
      username: str = Field(min_length=3, unique=True)
-     profile_picture_url: str
+     profile_picture: ProfilePicture
      bio: Optional[str] = None
 
 
@@ -51,3 +62,8 @@ class UserRegister(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    bio: Optional[str] = None

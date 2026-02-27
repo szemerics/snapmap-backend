@@ -5,6 +5,7 @@ from app.models.report import Report, ReportStatus
 from app.models.user import User, UserRole, UserSummary
 from app.config import engine
 
+
 class ReportView:
 
   async def get_all_reports(acting_user: User):
@@ -22,7 +23,7 @@ class ReportView:
     user_summary = UserSummary(
       user_id=acting_user.id,
       username=acting_user.username,
-      profile_picture_url=acting_user.profile_picture_url,
+      profile_picture=acting_user.profile_picture,
       bio=acting_user.bio
     )
 

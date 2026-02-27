@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.models.photo import CreatePhoto, UpdatePhoto, Photo
+from app.models.user import User
 from app.utils.auth import auth
 from app.views.photo import PhotoView
 from odmantic import ObjectId
@@ -12,7 +12,6 @@ class PhotoTypeFilter(str, Enum):
     map = "map"
 
 router = APIRouter()
-security = HTTPBearer()
 
 @router.get("/", tags=["Photos"])
 async def get_photos(photo_type: Optional[PhotoTypeFilter] = None, username: Optional[str] = None, photo_id: Optional[ObjectId] = None):
@@ -20,42 +19,47 @@ async def get_photos(photo_type: Optional[PhotoTypeFilter] = None, username: Opt
 
 
 @router.post("/", response_model=Photo, tags=["Photos"])
-async def create_photo(photo_data: str = Form(...), uploaded_file: UploadFile = File(...), credentials: HTTPAuthorizationCredentials = Depends(security)):
-  token = credentials.credentials
-  acting_user = await auth.get_current_user(token)
+async def create_photo(
+    photo_data: str = Form(...),
+    uploaded_file: UploadFile = File(...),
+    acting_user: User = Depends(auth.get_current_user),
+):
+    photo = CreatePhoto.model_validate_json(photo_data)
 
-  photo = CreatePhoto.model_validate_json(photo_data)
-
-  return await PhotoView.create_photo(photo, uploaded_file, acting_user[0])
+    try:
+        return await PhotoView.create_photo(photo, uploaded_file, acting_user)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.put("/{photo_id}", response_model=Photo, tags=["Photos"])
-async def update_photo(photo_id: ObjectId, photo_data: UpdatePhoto, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    acting_user = await auth.get_current_user(token)
-
+async def update_photo(
+    photo_id: ObjectId,
+    photo_data: UpdatePhoto,
+    acting_user: User = Depends(auth.get_current_user),
+):
     try:
-        result = await PhotoView.update_photo(photo_id, photo_data, acting_user[0])
+        result = await PhotoView.update_photo(photo_id, photo_data, acting_user)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except PermissionError as e:
-        raise HTTPException(status_code=401, detail=str(e))
-    
+        raise HTTPException(status_code=403, detail=str(e))
+
     return result
 
 
 @router.delete("/{photo_id}", tags=["Photos"])
-async def delete_photo(photo_id: ObjectId, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    acting_user = await auth.get_current_user(token)
-    
+async def delete_photo(
+    photo_id: ObjectId,
+    acting_user: User = Depends(auth.get_current_user),
+):
     try:
-        result = await PhotoView.delete_photo(photo_id, acting_user[0])
+        result = await PhotoView.delete_photo(photo_id, acting_user)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except PermissionError as e:
-        raise HTTPException(status_code=401, detail=str(e))
-    
+        raise HTTPException(status_code=403, detail=str(e))
+
     return result
 
 

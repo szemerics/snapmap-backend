@@ -2,14 +2,10 @@ from datetime import datetime
 from typing import Optional
 from app.config import engine
 from app.models.photo import Photo, CreatePhoto, UpdatePhoto
-from app.models.user import User, UserSummary, UserRole
+from app.models.user import User, UserSummary, UserRole, PhotoSummary
 from app.utils.images import CloudinaryService
 from fastapi import File
 from odmantic import ObjectId
-from PIL import Image
-import io
-from app.utils.nsfw_model import nsfw_pipeline
-from app.models.user import PhotoSummary
 
 
 class PhotoView:
@@ -60,26 +56,12 @@ class PhotoView:
     NSFW check is performed using the Falconsai/nsfw_image_detection model from huggingface.
     # init_public_id sets a fixed public ID for test uploads
     """
-    file_content = await uploaded_file.read()
-
-    # Convert raw bytes to a PIL image for classification
-    try:
-        image = Image.open(io.BytesIO(file_content))
-    except Exception as e:
-        print(f"Error loading image: {e}")
-        raise ValueError("Uploaded file is not a valid image")
-
-    classifications = nsfw_pipeline(image)
-
-    if (classifications[0]["label"].lower() == "nsfw") and (classifications[0]["score"] > 0.7):
-      raise ValueError("Uploaded image is classified as NSFW")
-
-    upload_result = CloudinaryService.upload_image(file_content, 'snapmap', public_id=init_public_id)
+    upload_result = await CloudinaryService.upload_image(uploaded_file, 'snapmap', public_id=init_public_id)
 
     user_summary = UserSummary(
       user_id=acting_user.id,
       username=acting_user.username,
-      profile_picture_url=acting_user.profile_picture_url,
+      profile_picture=acting_user.profile_picture,
       bio=acting_user.bio
     )
 
@@ -114,7 +96,7 @@ class PhotoView:
     
     if photo.user_summary.user_id != acting_user.id:
       if (acting_user.role == UserRole.USER):
-        raise PermissionError('You have no right to delete this photo')
+        raise PermissionError('You have no permission to update this photo')
     
     # Update only the metadata fields that were provided
     if update_data.location is not None:
