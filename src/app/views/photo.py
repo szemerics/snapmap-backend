@@ -43,9 +43,9 @@ class PhotoView:
       query.append(Photo.id == photo_id)
     
     if query:
-      photos = await engine.find(Photo, *query)
+      photos = await engine.find(Photo, *query, sort=Photo.date_posted.desc())
     else:
-      photos = await engine.find(Photo)
+      photos = await engine.find(Photo, sort=Photo.date_posted.desc())
 
     return photos
 
@@ -79,7 +79,7 @@ class PhotoView:
     )
 
     saved_photo = await engine.save(photo)
-    acting_user.photo_summaries.append(PhotoSummary(photo_id=saved_photo.id, photo_url=saved_photo.photo_url))
+    acting_user.photo_summaries.insert(0, PhotoSummary(photo_id=saved_photo.id, photo_url=saved_photo.photo_url))
     await engine.save(acting_user)
 
     return saved_photo
