@@ -27,18 +27,15 @@ class UserView:
         if comment.replies:
           _update_comment_tree(comment.replies)
 
-    photos: List[Photo] = await engine.find(Photo, Photo.user_summary.user_id == user.id)
+    photos: List[Photo] = await engine.find(Photo)
 
     for photo in photos:
-      # Update photo owner summary
       _update_user_summary(photo.user_summary)
 
-      # Update likes where this user appears
       if photo.likes:
         for like in photo.likes:
           _update_user_summary(like)
 
-      # Update comments (and nested replies) where this user appears
       if photo.comments:
         _update_comment_tree(photo.comments)
 
