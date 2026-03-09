@@ -1,3 +1,4 @@
+from bson import ObjectId
 from odmantic import Field, Model
 from datetime import datetime
 from typing import Optional, List
@@ -11,11 +12,20 @@ class Location(BaseModel):
 
 
 class Comment(BaseModel):
+    comment_id: ObjectId
     user_summary: UserSummary
     comment_date: datetime
     content: str
     likes: int = Field(default=0)
     replies: Optional[List['Comment']] = None  # Allow nested comments
+
+    model_config = {
+        "arbitrary_types_allowed": True
+    }
+
+
+class Like(BaseModel):
+    user_summary: UserSummary
 
 
 class Photo(Model):
@@ -35,8 +45,8 @@ class Photo(Model):
     # Post
     date_posted: datetime
     caption: Optional[str] = None
-    likes: int = Field(default=0)
-    comments: Optional[List[Comment]] = Field(default=None)
+    likes: Optional[List[Like]] = Field(default_factory=list)
+    comments: Optional[List[Comment]] = Field(default_factory=list)
 
     model_config = {
         "collection": "photos"

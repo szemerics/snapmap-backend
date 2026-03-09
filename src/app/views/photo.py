@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from app.config import engine
-from app.models.photo import Photo, CreatePhoto, UpdatePhoto
+from app.models.photo import Like, Photo, CreatePhoto, UpdatePhoto
 from app.models.user import User, UserSummary, UserRole, PhotoSummary
 from app.utils.images import CloudinaryService
 from fastapi import File
@@ -143,3 +143,36 @@ class PhotoView:
     await engine.delete(photo)
     
     return {"message": "Photo deleted successfully"}
+
+
+  async def like_photo(photo_id: ObjectId, acting_user: User):
+    """
+    Like a photo.
+    """
+    photo = await engine.find_one(Photo, Photo.id == photo_id)
+    if not photo:
+      raise ValueError(f'Photo with id {photo_id} not found')
+
+    user_summary = UserSummary(
+      user_id=acting_user.id,
+      username=acting_user.username,
+      profile_picture=acting_user.profile_picture,
+      bio=acting_user.bio
+    )
+    
+    photo.likes.append(Like(user_summary=user_summary))
+    await engine.save(photo)
+    return photo
+
+
+  async def unlike_photo(photo_id: ObjectId, acting_user: User):
+    """
+    Unlike a photo.
+    """
+    photo = await engine.find_one(Photo, Photo.id == photo_id)
+    if not photo:
+      raise ValueError(f'Photo with id {photo_id} not found')
+    
+    photo.likes = [like for like in photo.likes if like.user_summary.user_id != acting_user.id]
+    await engine.save(photo)
+    return photo

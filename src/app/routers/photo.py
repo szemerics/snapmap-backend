@@ -63,6 +63,32 @@ async def delete_photo(
     return result
 
 
+@router.post("/{photo_id}/like", tags=["Photos"])
+async def like_photo(
+    photo_id: ObjectId,
+    acting_user: User = Depends(auth.get_current_user),
+):
+    try:
+        result = await PhotoView.like_photo(photo_id, acting_user)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    return result
+
+
+@router.delete("/{photo_id}/unlike", tags=["Photos"])
+async def unlike_photo(
+    photo_id: ObjectId,
+    acting_user: User = Depends(auth.get_current_user),
+):
+    try:
+        result = await PhotoView.unlike_photo(photo_id, acting_user)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    return result
+
+
 # @router.delete("/", tags=["Admin"])
 # async def delete_all_photos():
 #     return await PhotoView.delete_all_photos()
