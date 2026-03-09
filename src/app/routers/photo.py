@@ -63,7 +63,7 @@ async def delete_photo(
     return result
 
 
-@router.post("/{photo_id}/like", tags=["Photos"])
+@router.post("/like/{photo_id}", tags=["Photos"])
 async def like_photo(
     photo_id: ObjectId,
     acting_user: User = Depends(auth.get_current_user),
@@ -76,7 +76,7 @@ async def like_photo(
     return result
 
 
-@router.delete("/{photo_id}/unlike", tags=["Photos"])
+@router.delete("/like/{photo_id}", tags=["Photos"])
 async def unlike_photo(
     photo_id: ObjectId,
     acting_user: User = Depends(auth.get_current_user),
@@ -89,7 +89,7 @@ async def unlike_photo(
     return result
 
 
-@router.post("/{photo_id}/comments", response_model=Photo, tags=["Comments"])
+@router.post("/comment/{photo_id}", response_model=Photo, tags=["Comments"])
 async def add_comment(
     photo_id: ObjectId,
     comment_data: CreateComment,
@@ -103,7 +103,7 @@ async def add_comment(
     return result
 
 
-@router.post("/{photo_id}/comments/{comment_id}/reply", response_model=Photo, tags=["Comments"])
+@router.post("/comment/{photo_id}/reply/{comment_id}", response_model=Photo, tags=["Comments"])
 async def reply_to_comment(
     photo_id: ObjectId,
     comment_id: ObjectId,

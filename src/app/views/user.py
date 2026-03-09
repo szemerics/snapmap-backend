@@ -2,7 +2,7 @@ from typing import Optional, List
 from fastapi import File
 from app.config import engine
 from app.models.user import User, UserRole, UserUpdate, ProfilePicture
-from app.models.photo import Photo
+from app.models.photo import Comment, Photo
 from odmantic import ObjectId
 
 from app.utils.images import CloudinaryService
@@ -15,12 +15,32 @@ class UserView:
     """
     Update all photo documents to match the user's latest info.
     """
+    def _update_user_summary(summary):
+      if summary.user_id == user.id:
+        summary.username = user.username
+        summary.profile_picture = user.profile_picture
+        summary.bio = user.bio
+
+    def _update_comment_tree(comments):
+      for comment in comments:
+        _update_user_summary(comment.user_summary)
+        if comment.replies:
+          _update_comment_tree(comment.replies)
+
     photos: List[Photo] = await engine.find(Photo, Photo.user_summary.user_id == user.id)
 
     for photo in photos:
-      photo.user_summary.username = user.username
-      photo.user_summary.profile_picture = user.profile_picture
-      photo.user_summary.bio = user.bio
+      # Update photo owner summary
+      _update_user_summary(photo.user_summary)
+
+      # Update likes where this user appears
+      if photo.likes:
+        for like in photo.likes:
+          _update_user_summary(like)
+
+      # Update comments (and nested replies) where this user appears
+      if photo.comments:
+        _update_comment_tree(photo.comments)
 
       await engine.save(photo)
 

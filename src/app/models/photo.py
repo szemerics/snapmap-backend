@@ -13,18 +13,13 @@ class Location(BaseModel):
 class Comment(BaseModel):
     comment_id: ObjectId = Field(default_factory=ObjectId)
     user_summary: UserSummary
-    comment_date: datetime
+    comment_date: datetime = Field(default_factory=datetime.now)
     content: str
-    likes: int = Field(default=0)
     replies: List['Comment'] = Field(default_factory=list)
 
     model_config = {
         "arbitrary_types_allowed": True
     }
-
-
-class Like(BaseModel):
-    user_summary: UserSummary
 
 
 class CreateComment(BaseModel):
@@ -46,9 +41,9 @@ class Photo(Model):
     settings_used: Optional[Settings] = None
 
     # Post
-    date_posted: datetime
+    date_posted: datetime = ODMField(default_factory=datetime.now)
     caption: Optional[str] = None
-    likes: List[Like] = ODMField(default_factory=list)
+    likes: List[UserSummary] = ODMField(default_factory=list)
     comments: List[Comment] = ODMField(default_factory=list)
 
     model_config = {

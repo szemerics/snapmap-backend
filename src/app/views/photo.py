@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 from app.config import engine
-from app.models.photo import Like, Photo, CreatePhoto, UpdatePhoto, Comment, CreateComment
+from app.models.photo import Photo, CreatePhoto, UpdatePhoto, Comment, CreateComment
 from app.models.user import User, UserSummary, UserRole, PhotoSummary
 from app.utils.images import CloudinaryService
 from fastapi import File
@@ -171,7 +171,7 @@ class PhotoView:
 
     user_summary = PhotoView._build_user_summary(acting_user)
     
-    photo.likes.append(Like(user_summary=user_summary))
+    photo.likes.append(user_summary)
     await engine.save(photo)
     return photo
 
@@ -184,7 +184,7 @@ class PhotoView:
     if not photo:
       raise ValueError(f'Photo with id {photo_id} not found')
     
-    photo.likes = [like for like in photo.likes if like.user_summary.user_id != acting_user.id]
+    photo.likes = [like for like in photo.likes if like.user_id != acting_user.id]
     await engine.save(photo)
     return photo
 

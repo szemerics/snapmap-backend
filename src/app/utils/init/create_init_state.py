@@ -58,7 +58,7 @@ async def __upload_photos(default_user: User, moderator_user: User, admin_user: 
 
 async def __set_photo_metadata(photo: Photo, photo_entry: PhotoEntry):
     """Set likes and comments on a photo after creation."""
-    if photo_entry.likes > 0:
+    if photo_entry.likes:
         photo.likes = photo_entry.likes
     
     if photo_entry.comments:
