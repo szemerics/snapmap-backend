@@ -1,8 +1,7 @@
-from bson import ObjectId
-from odmantic import Field, Model
+from odmantic import Field as ODMField, Model, ObjectId
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.models.user import UserSummary
 from app.models.additional_data import Gear, Settings
 
@@ -12,12 +11,12 @@ class Location(BaseModel):
 
 
 class Comment(BaseModel):
-    comment_id: ObjectId
+    comment_id: ObjectId = Field(default_factory=ObjectId)
     user_summary: UserSummary
     comment_date: datetime
     content: str
     likes: int = Field(default=0)
-    replies: Optional[List['Comment']] = None  # Allow nested comments
+    replies: List['Comment'] = Field(default_factory=list)
 
     model_config = {
         "arbitrary_types_allowed": True
@@ -26,6 +25,10 @@ class Comment(BaseModel):
 
 class Like(BaseModel):
     user_summary: UserSummary
+
+
+class CreateComment(BaseModel):
+    content: str
 
 
 class Photo(Model):
@@ -45,8 +48,8 @@ class Photo(Model):
     # Post
     date_posted: datetime
     caption: Optional[str] = None
-    likes: Optional[List[Like]] = Field(default_factory=list)
-    comments: Optional[List[Comment]] = Field(default_factory=list)
+    likes: List[Like] = ODMField(default_factory=list)
+    comments: List[Comment] = ODMField(default_factory=list)
 
     model_config = {
         "collection": "photos"

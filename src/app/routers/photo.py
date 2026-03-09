@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
-from app.models.photo import CreatePhoto, UpdatePhoto, Photo
+from app.models.photo import CreatePhoto, UpdatePhoto, Photo, CreateComment
 from app.models.user import User
 from app.utils.auth import auth
 from app.views.photo import PhotoView
@@ -83,6 +83,35 @@ async def unlike_photo(
 ):
     try:
         result = await PhotoView.unlike_photo(photo_id, acting_user)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    return result
+
+
+@router.post("/{photo_id}/comments", response_model=Photo, tags=["Comments"])
+async def add_comment(
+    photo_id: ObjectId,
+    comment_data: CreateComment,
+    acting_user: User = Depends(auth.get_current_user),
+):
+    try:
+        result = await PhotoView.add_comment(photo_id, comment_data, acting_user)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    return result
+
+
+@router.post("/{photo_id}/comments/{comment_id}/reply", response_model=Photo, tags=["Comments"])
+async def reply_to_comment(
+    photo_id: ObjectId,
+    comment_id: ObjectId,
+    comment_data: CreateComment,
+    acting_user: User = Depends(auth.get_current_user),
+):
+    try:
+        result = await PhotoView.reply_to_comment(photo_id, comment_id, comment_data, acting_user)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 

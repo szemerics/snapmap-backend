@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from app.config import engine
-from app.models.photo import Like, Photo, CreatePhoto, UpdatePhoto
+from app.models.photo import Like, Photo, CreatePhoto, UpdatePhoto, Comment, CreateComment
 from app.models.user import User, UserSummary, UserRole, PhotoSummary
 from app.utils.images import CloudinaryService
 from fastapi import File
@@ -20,6 +20,27 @@ class PhotoView:
   #     await engine.delete(photo)
 
   #   return {"message": "All photos deleted successfully"}
+
+
+  @staticmethod
+  def _build_user_summary(acting_user: User) -> UserSummary:
+    return UserSummary(
+      user_id=acting_user.id,
+      username=acting_user.username,
+      profile_picture=acting_user.profile_picture,
+      bio=acting_user.bio
+    )
+
+  
+  @staticmethod
+  def _find_comment(comments: List[Comment], comment_id: ObjectId) -> Optional[Comment]:
+    for comment in comments:
+      if comment.comment_id == comment_id:
+        return comment
+      found = PhotoView._find_comment(comment.replies, comment_id)
+      if found:
+        return found
+    return None
 
 
   async def get_photos(photo_type: str = None, username: str = None, photo_id: ObjectId = None):
@@ -58,12 +79,7 @@ class PhotoView:
     """
     upload_result = await CloudinaryService.upload_image(uploaded_file, 'snapmap', public_id=init_public_id)
 
-    user_summary = UserSummary(
-      user_id=acting_user.id,
-      username=acting_user.username,
-      profile_picture=acting_user.profile_picture,
-      bio=acting_user.bio
-    )
+    user_summary = PhotoView._build_user_summary(acting_user)
 
     photo = Photo(
         user_summary=user_summary,
@@ -153,12 +169,7 @@ class PhotoView:
     if not photo:
       raise ValueError(f'Photo with id {photo_id} not found')
 
-    user_summary = UserSummary(
-      user_id=acting_user.id,
-      username=acting_user.username,
-      profile_picture=acting_user.profile_picture,
-      bio=acting_user.bio
-    )
+    user_summary = PhotoView._build_user_summary(acting_user)
     
     photo.likes.append(Like(user_summary=user_summary))
     await engine.save(photo)
@@ -174,5 +185,51 @@ class PhotoView:
       raise ValueError(f'Photo with id {photo_id} not found')
     
     photo.likes = [like for like in photo.likes if like.user_summary.user_id != acting_user.id]
+    await engine.save(photo)
+    return photo
+
+
+  async def add_comment(photo_id: ObjectId, new_comment: CreateComment, acting_user: User):
+    """
+    Add a new top-level comment to a photo.
+    """
+    photo = await engine.find_one(Photo, Photo.id == photo_id)
+    if not photo:
+      raise ValueError(f'Photo with id {photo_id} not found')
+
+    user_summary = PhotoView._build_user_summary(acting_user)
+
+    comment = Comment(
+      user_summary=user_summary,
+      comment_date=datetime.now(),
+      content=new_comment.content
+    )
+
+    photo.comments.append(comment)
+    await engine.save(photo)
+    return photo
+
+
+  async def reply_to_comment(photo_id: ObjectId, comment_id: ObjectId, new_comment: CreateComment, acting_user: User):
+    """
+    Add a reply to an existing comment on a photo.
+    """
+    photo = await engine.find_one(Photo, Photo.id == photo_id)
+    if not photo:
+      raise ValueError(f'Photo with id {photo_id} not found')
+
+    target_comment = PhotoView._find_comment(photo.comments, comment_id)
+    if not target_comment:
+      raise ValueError(f'Comment with id {comment_id} not found on this photo')
+
+    user_summary = PhotoView._build_user_summary(acting_user)
+
+    reply = Comment(
+      user_summary=user_summary,
+      comment_date=datetime.now(),
+      content=new_comment.content
+    )
+
+    target_comment.replies.append(reply)
     await engine.save(photo)
     return photo
