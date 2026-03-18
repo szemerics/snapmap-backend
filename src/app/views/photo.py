@@ -6,6 +6,7 @@ from app.models.user import User, UserSummary, UserRole, PhotoSummary
 from app.utils.images import CloudinaryService
 from fastapi import File
 from odmantic import ObjectId
+import re
 
 
 class PhotoView:
@@ -43,7 +44,20 @@ class PhotoView:
     return None
 
 
-  async def get_photos(photo_type: str = None, username: str = None, photo_id: ObjectId = None):
+  async def get_photos(
+    photo_type: str = None, 
+    username: str = None, 
+    photo_id: ObjectId = None, 
+    date_captured_from: datetime = None, 
+    date_captured_to: datetime = None,
+    camera_brand: str = None,
+    camera_model: str = None,
+    camera_type: str = None,
+    lens: str = None,
+    iso: int = None,
+    shutter_speed: str = None,
+    aperture: str = None,
+  ):
     """
     Get photos from the database with optional filters.
     Args:
@@ -53,15 +67,77 @@ class PhotoView:
     """
     query = []
     
+    # Photo type filter
     if photo_type == 'post':
       query.append(Photo.location == None)
     elif photo_type == 'map':
       query.append(Photo.location != None)
     
     if username:
-      query.append(Photo.user_summary.username == username)
+      query.append({
+        "user_summary.username": {
+          "$regex": re.escape(username),
+          "$options": "i",
+        }
+      })
+
     if photo_id:
       query.append(Photo.id == photo_id)
+
+    if date_captured_from:
+      query.append(Photo.date_captured >= date_captured_from)
+    if date_captured_to:
+      query.append(Photo.date_captured <= date_captured_to)
+
+    if camera_brand:
+      query.append({
+        "gear.camera.brand": {
+          "$regex": re.escape(camera_brand),
+          "$options": "i",
+        }
+      })
+    if camera_model:
+      query.append({
+        "gear.camera.model": {
+          "$regex": re.escape(camera_model),
+          "$options": "i",
+        }
+      })
+    if camera_type:
+      query.append({
+        "gear.camera.type": {
+          "$regex": re.escape(camera_type),
+          "$options": "i",
+        }
+      })
+
+    if lens:
+      query.append({
+        "gear.lens": {
+          "$regex": re.escape(lens),
+          "$options": "i",
+        }
+      })
+
+    if iso is not None:
+      query.append({
+        "settings_used.iso": iso
+      })
+
+    if shutter_speed:
+      query.append({
+        "settings_used.shutter_speed": {
+          "$regex": re.escape(shutter_speed),
+          "$options": "i",
+        }
+      })
+    if aperture:
+      query.append({
+        "settings_used.aperture": {
+          "$regex": re.escape(aperture),
+          "$options": "i",
+        }
+      })
     
     if query:
       photos = await engine.find(Photo, *query, sort=Photo.date_posted.desc())

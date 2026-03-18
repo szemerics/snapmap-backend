@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from app.models.photo import CreatePhoto, UpdatePhoto, Photo, CreateComment
 from app.models.user import User
@@ -14,8 +15,33 @@ class PhotoTypeFilter(str, Enum):
 router = APIRouter()
 
 @router.get("/", tags=["Photos"])
-async def get_photos(photo_type: Optional[PhotoTypeFilter] = None, username: Optional[str] = None, photo_id: Optional[ObjectId] = None):
-    return await PhotoView.get_photos(photo_type.value if photo_type else None, username, photo_id) 
+async def get_photos(
+    photo_type: Optional[PhotoTypeFilter] = None, 
+    username: Optional[str] = None, 
+    photo_id: Optional[ObjectId] = None, 
+    camera_brand: Optional[str] = None, 
+    camera_model: Optional[str] = None, 
+    camera_type: Optional[str] = None, 
+    lens: Optional[str] = None, 
+    iso: Optional[int] = None, 
+    shutter_speed: Optional[str] = None, 
+    aperture: Optional[str] = None, 
+    date_captured_from: Optional[datetime] = None, 
+    date_captured_to: Optional[datetime] = None):
+    return await PhotoView.get_photos(
+        photo_type=photo_type.value if photo_type else None,
+        username=username,
+        photo_id=photo_id,
+        date_captured_from=date_captured_from,
+        date_captured_to=date_captured_to,
+        camera_brand=camera_brand,
+        camera_model=camera_model,
+        camera_type=camera_type,
+        lens=lens,
+        iso=iso,
+        shutter_speed=shutter_speed,
+        aperture=aperture,
+    ) 
 
 
 @router.post("/", response_model=Photo, tags=["Photos"])

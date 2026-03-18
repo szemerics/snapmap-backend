@@ -23,8 +23,8 @@ async def login_auth(user_data: UserLogin):
   user = await __authenticate_user(user_data.email, user_data.password)
 
   if not user:
-    return None
-
+    raise ValueError("Invalid credentials")
+  
   access_token_expires = timedelta(minutes=1440)
   access_token = await __create_access_token(
       data={"email": user.email, "role": user.role}, expires_delta=access_token_expires

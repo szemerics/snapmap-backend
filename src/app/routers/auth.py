@@ -6,9 +6,13 @@ router = APIRouter()
 
 @router.post("/login")
 async def login_for_access_token(user_data: UserLogin):
-    token = await auth.login_auth(user_data)
-    if not token:
-        raise HTTPException(status_code=401, detail='Invalid credentials')
+    try:
+        token = await auth.login_auth(user_data)
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
     return token
 
 
