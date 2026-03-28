@@ -2,7 +2,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from app.views.user import UserView
 from app.utils.auth import auth
-from app.models.user import User, UserRole, UserUpdate
+from app.models.user import User, UserRole, UserUpdate, FollowUser, FollowCounts
+from odmantic import ObjectId
 
 router = APIRouter()
 
@@ -62,3 +63,60 @@ async def update_profile_data(
         raise HTTPException(status_code=403, detail=str(e))
     
     return modified_user
+
+
+@router.post("/follow/{target_user_id}", tags=["User"])
+async def follow_user(
+    target_user_id: ObjectId,
+    acting_user: User = Depends(auth.get_current_user)
+):
+    try:
+        return await UserView.follow_user(target_user_id, acting_user)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/follow/{target_user_id}", tags=["User"])
+async def unfollow_user(
+    target_user_id: ObjectId,
+    acting_user: User = Depends(auth.get_current_user)
+):
+    try:
+        return await UserView.unfollow_user(target_user_id, acting_user)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/{user_id}/followers", response_model=list[FollowUser], tags=["User"])
+async def get_followers(user_id: ObjectId):
+    try:
+        return await UserView.get_followers(user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/{user_id}/following", response_model=list[FollowUser], tags=["User"])
+async def get_following(user_id: ObjectId):
+    try:
+        return await UserView.get_following(user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/{user_id}/follow-counts", response_model=FollowCounts, tags=["User"])
+async def get_follow_counts(user_id: ObjectId):
+    try:
+        return await UserView.get_follow_counts(user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    
+
+@router.get("/{user_id}/follow-state", tags=["User"])
+async def get_follow_state(
+    user_id: ObjectId,
+    acting_user: User = Depends(auth.get_current_user)
+):
+    try:
+        return await UserView.get_follow_state(user_id, acting_user)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))

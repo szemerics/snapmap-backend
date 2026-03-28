@@ -18,6 +18,11 @@ async def get_photos(photo_type: Optional[PhotoTypeFilter] = None, username: Opt
     return await PhotoView.get_photos(photo_type.value if photo_type else None, username, photo_id) 
 
 
+@router.get("/following", tags=["Photos"])
+async def get_following_photos(acting_user: User = Depends(auth.get_current_user)):
+    return await PhotoView.get_following_photos(acting_user)
+
+
 @router.post("/", response_model=Photo, tags=["Photos"])
 async def create_photo(
     photo_data: str = Form(...),

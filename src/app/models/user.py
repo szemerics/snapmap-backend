@@ -19,7 +19,7 @@ class ProfilePicture(EmbeddedModel):
 
 
 DEFAULT_PROFILE_PICTURE = ProfilePicture(
-    url="https://res.cloudinary.com/dyhnln455/image/upload/v1771849294/Default_pfp_oe2fst.svg",
+    url="https://res.cloudinary.com/dyhnln455/image/upload/v1771849294/default-pfp.svg",
     public_id="default-pfp",
 )
 
@@ -67,3 +67,15 @@ class UserLogin(BaseModel):
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     bio: Optional[str] = None
+
+
+class FollowUser(BaseModel):
+    user_id: str
+    username: str
+    profile_picture: ProfilePicture
+    bio: Optional[str] = None
+
+
+class FollowCounts(BaseModel):
+    followers: int
+    following: int

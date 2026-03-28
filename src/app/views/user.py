@@ -1,14 +1,24 @@
 from typing import Optional, List
 from fastapi import File
 from app.config import engine
-from app.models.user import User, UserRole, UserUpdate, ProfilePicture
+from app.models.user import User, UserRole, UserUpdate, ProfilePicture, FollowUser, FollowCounts
 from app.models.photo import Comment, Photo
+from app.models.follow import Follow
 from odmantic import ObjectId
 
 from app.utils.images import CloudinaryService
 
 
 class UserView:
+
+  @staticmethod
+  def _build_follow_user(user: User) -> FollowUser:
+    return FollowUser(
+      user_id=str(user.id),
+      username=user.username,
+      profile_picture=user.profile_picture,
+      bio=user.bio
+    )
 
   @staticmethod
   async def _update_user_summaries(user: User):
@@ -127,3 +137,120 @@ class UserView:
     await UserView._update_user_summaries(user)
 
     return user
+
+
+  async def follow_user(target_user_id: ObjectId, acting_user: User):
+    """
+    Follow another user.
+    """
+    if target_user_id == acting_user.id:
+      raise ValueError("You cannot follow yourself")
+
+    target_user = await engine.find_one(User, User.id == target_user_id)
+    if target_user is None:
+      raise ValueError("User not found")
+
+    existing_follow = await engine.find_one(
+      Follow,
+      (Follow.follower_id == acting_user.id) & (Follow.followee_id == target_user_id)
+    )
+    if existing_follow:
+      raise ValueError("You already follow this user")
+
+    follow = Follow(
+      follower_id=acting_user.id,
+      followee_id=target_user_id
+    )
+    await engine.save(follow)
+
+    return {"message": "User followed successfully"}
+
+
+  async def unfollow_user(target_user_id: ObjectId, acting_user: User):
+    """
+    Unfollow a user.
+    """
+    follow = await engine.find_one(
+      Follow,
+      (Follow.follower_id == acting_user.id) & (Follow.followee_id == target_user_id)
+    )
+    if follow is None:
+      raise ValueError("You do not follow this user")
+
+    await engine.delete(follow)
+
+    return {"message": "User unfollowed successfully"}
+
+
+  async def get_followers(user_id: ObjectId):
+    """
+    Get users that follow the target user.
+    """
+    user = await engine.find_one(User, User.id == user_id)
+    if user is None:
+      raise ValueError("User not found")
+
+    follows = await engine.find(Follow, Follow.followee_id == user_id)
+    followers: List[FollowUser] = []
+
+    for follow in follows:
+      follower = await engine.find_one(User, User.id == follow.follower_id)
+      if follower:
+        followers.append(UserView._build_follow_user(follower))
+
+    return followers
+
+
+  async def get_following(user_id: ObjectId):
+    """
+    Get users that the target user follows.
+    """
+    user = await engine.find_one(User, User.id == user_id)
+    if user is None:
+      raise ValueError("User not found")
+
+    follows = await engine.find(Follow, Follow.follower_id == user_id)
+    following: List[FollowUser] = []
+
+    for follow in follows:
+      followed_user = await engine.find_one(User, User.id == follow.followee_id)
+      if followed_user:
+        following.append(UserView._build_follow_user(followed_user))
+
+    return following
+
+
+  async def get_follow_counts(user_id: ObjectId):
+    """
+    Get follower and following counts for a user.
+    """
+    user = await engine.find_one(User, User.id == user_id)
+    if user is None:
+      raise ValueError("User not found")
+
+    followers = await engine.find(Follow, Follow.followee_id == user_id)
+    following = await engine.find(Follow, Follow.follower_id == user_id)
+
+    return FollowCounts(
+      followers=len(followers),
+      following=len(following)
+    )
+  
+
+  async def get_follow_state(target_user_id: ObjectId, acting_user: User):
+    """
+    Get the follow state between the acting user and the target user.
+    """
+    if target_user_id == acting_user.id:
+      raise ValueError("You cannot follow yourself")
+
+    target_user = await engine.find_one(User, User.id == target_user_id)
+    if target_user is None:
+      raise ValueError("User not found")
+
+    existing_follow = await engine.find_one(
+      Follow,
+      (Follow.follower_id == acting_user.id) & (Follow.followee_id == target_user_id)
+    )
+
+    return {"is_following": existing_follow is not None}
