@@ -11,6 +11,7 @@ sys.path.insert(0, str(src_path))
 from app.models.user import User, UserRegister, UserRole
 from app.utils.auth import auth
 
+from app.models.follow import Follow
 from app.models.photo import Photo
 from app.config import configure_cloudinary, engine
 from app.views.photo import PhotoView
@@ -28,7 +29,29 @@ async def main():
     moderator_user.role = UserRole.MODERATOR
     await engine.save(moderator_user)
 
+    await __create_follows_between_users([default_user, moderator_user, admin_user])
     await __upload_photos(default_user, moderator_user, admin_user)
+
+
+async def __create_follows_between_users(users: List[User]):
+    """Create mutual follows between all provided users."""
+    print('Creating follows...')
+
+    for follower in users:
+        for followee in users:
+            if follower.id == followee.id:
+                continue
+
+            existing_follow = await engine.find_one(
+                Follow,
+                (Follow.follower_id == follower.id) & (Follow.followee_id == followee.id)
+            )
+            if existing_follow is not None:
+                print(f'{follower.username} already follows {followee.username}, skipping...')
+                continue
+
+            await engine.save(Follow(follower_id=follower.id, followee_id=followee.id))
+            print(f'{follower.username} now follows {followee.username}')
 
 
 async def __upload_photos(default_user: User, moderator_user: User, admin_user: User):

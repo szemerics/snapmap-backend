@@ -3,6 +3,7 @@ from typing import Optional, List
 from app.config import engine
 from app.models.photo import Photo, CreatePhoto, UpdatePhoto, Comment, CreateComment
 from app.models.user import User, UserSummary, UserRole, PhotoSummary
+from app.models.follow import Follow
 from app.utils.images import CloudinaryService
 from fastapi import File
 from odmantic import ObjectId
@@ -143,6 +144,26 @@ class PhotoView:
       photos = await engine.find(Photo, *query, sort=Photo.date_posted.desc())
     else:
       photos = await engine.find(Photo, sort=Photo.date_posted.desc())
+
+    return photos
+
+
+  async def get_following_photos(acting_user: User):
+    """
+    Get photos from users the current user follows.
+    """
+    follows = await engine.find(Follow, Follow.follower_id == acting_user.id)
+
+    if len(follows) == 0:
+      return []
+
+    followed_user_ids = [follow.followee_id for follow in follows]
+
+    photos = await engine.find(
+      Photo,
+      {"user_summary.user_id": {"$in": followed_user_ids}},
+      sort=Photo.date_posted.desc()
+    )
 
     return photos
 
