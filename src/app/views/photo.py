@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 from app.config import engine
+from app import settings
 from app.models.photo import Photo, CreatePhoto, UpdatePhoto, Comment, CreateComment
 from app.models.user import User, UserSummary, UserRole, PhotoSummary
 from app.models.follow import Follow
@@ -174,7 +175,11 @@ class PhotoView:
     NSFW check is performed using the Falconsai/nsfw_image_detection model from huggingface.
     # init_public_id sets a fixed public ID for test uploads
     """
-    upload_result = await CloudinaryService.upload_image(uploaded_file, 'snapmap', public_id=init_public_id)
+    upload_result = await CloudinaryService.upload_image(
+      uploaded_file,
+      settings.CLOUDINARY_UPLOAD_FOLDER,
+      public_id=init_public_id
+    )
 
     user_summary = PhotoView._build_user_summary(acting_user)
 

@@ -14,6 +14,7 @@ from app.utils.auth import auth
 from app.models.follow import Follow
 from app.models.photo import Photo
 from app.config import configure_cloudinary, engine
+from app import settings
 from app.views.photo import PhotoView
 from app.utils.init.lib.photo_entries import PhotoEntry, get_photo_entries
 
@@ -61,7 +62,9 @@ async def __upload_photos(default_user: User, moderator_user: User, admin_user: 
 
     for photo_entry in to_upload_photos:
       user_to_upload = await engine.find_one(User, (User.id == photo_entry.user_id))
-      init_public_id_full = f"snapmap/init-{photo_entry.init_id}-{user_to_upload.username}"
+      init_public_id_full = (
+          f"{settings.CLOUDINARY_UPLOAD_FOLDER}/init-{photo_entry.init_id}-{user_to_upload.username}"
+      )
       is_existing_photo = await engine.find_one(Photo, Photo.cloudinary_public_id == init_public_id_full) is not None
 
       if is_existing_photo:
