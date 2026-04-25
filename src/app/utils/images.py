@@ -1,7 +1,7 @@
 import cloudinary.uploader
 from PIL import Image
 import io
-from app.utils.nsfw_model import classify_image
+from app.utils.nsfw_model import NSFWModel
 from fastapi import File
 
 # image_tag = cloudinary.CloudinaryImage('main-sample').image()
@@ -9,12 +9,15 @@ from fastapi import File
 # image_info = cloudinary.api.resource('main-sample')
 
 
-class CloudinaryService:
+nsfw_model = NSFWModel()
+
+class ImageService:
 
   async def upload_image(file: File, folder: str, public_id: str = None):
     """
     Upload an image to Cloudinary.
     If public_id is provided, it will overwrite the existing image with that public_id.
+    This also includes NSFW classification
     """
     file_content = await file.read()
 
@@ -26,7 +29,7 @@ class CloudinaryService:
         raise ValueError("Uploaded file is not a valid image")
 
 
-    classifications = classify_image(image)
+    classifications = nsfw_model.classify_image(image)
     if isinstance(classifications, dict) and classifications.get("error"):
       raise ValueError(f"NSFW classification failed: {classifications['error']}")
     if not isinstance(classifications, list) or len(classifications) == 0:

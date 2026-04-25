@@ -6,7 +6,7 @@ from app.models.photo import Comment, Photo
 from app.models.follow import Follow
 from odmantic import ObjectId
 
-from app.utils.images import CloudinaryService
+from app.utils.images import ImageService
 
 
 class UserView:
@@ -102,7 +102,7 @@ class UserView:
     if user.profile_picture and user.profile_picture.public_id != "default-pfp":
       public_id = user.profile_picture.public_id
 
-    upload_result = await CloudinaryService.upload_image(uploaded_file, 'snapmap-pfps', public_id=public_id)
+    upload_result = await ImageService.upload_image(uploaded_file, 'snapmap-pfps', public_id=public_id)
 
     user.profile_picture = ProfilePicture(
       url=str(upload_result["secure_url"]),

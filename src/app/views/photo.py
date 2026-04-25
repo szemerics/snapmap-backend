@@ -5,7 +5,7 @@ from app import settings
 from app.models.photo import Photo, CreatePhoto, UpdatePhoto, Comment, CreateComment
 from app.models.user import User, UserSummary, UserRole, PhotoSummary
 from app.models.follow import Follow
-from app.utils.images import CloudinaryService
+from app.utils.images import ImageService
 from fastapi import File
 from odmantic import ObjectId
 import re
@@ -19,7 +19,7 @@ class PhotoView:
   #   photos = await engine.find(Photo)
 
   #   for photo in photos:
-  #     CloudinaryService.delete_image(photo.cloudinary_public_id)
+  #     ImageService.delete_image(photo.cloudinary_public_id)
   #     await engine.delete(photo)
 
   #   return {"message": "All photos deleted successfully"}
@@ -175,7 +175,7 @@ class PhotoView:
     NSFW check is performed using the Falconsai/nsfw_image_detection model from huggingface.
     # init_public_id sets a fixed public ID for test uploads
     """
-    upload_result = await CloudinaryService.upload_image(
+    upload_result = await ImageService.upload_image(
       uploaded_file,
       settings.CLOUDINARY_UPLOAD_FOLDER,
       public_id=init_public_id
@@ -253,7 +253,7 @@ class PhotoView:
       
       target_user = await engine.find_one(User, User.id == photo.user_summary.user_id)
     
-    CloudinaryService.delete_image(photo.cloudinary_public_id)
+    ImageService.delete_image(photo.cloudinary_public_id)
     
     target_user.photo_summaries = [p for p in target_user.photo_summaries if p.photo_id != photo_id]
     await engine.save(target_user)
