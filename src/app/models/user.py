@@ -35,7 +35,6 @@ class User(Model):
     email: EmailStr = Field(unique=True)
     password_hash: str
     role: UserRole = Field(default=UserRole.USER)
-    gears: Optional[List[Gear]] = None
     profile_picture: ProfilePicture = Field(default=DEFAULT_PROFILE_PICTURE)
     bio: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)

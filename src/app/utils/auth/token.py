@@ -1,24 +1,16 @@
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 import os
 from fastapi import Response
 import jwt
-from odmantic import ObjectId
 from pydantic import BaseModel
-from app.config import engine
-from app.models.user import User, UserRole
+from app.models.user import User
 from dotenv import load_dotenv
 
 load_dotenv()
 
-class TokenUser(BaseModel):
-    id: ObjectId
-    username: str
-    email: str
-    role: UserRole
-
 class AuthResponse(BaseModel):
     access_token: str
-    user: TokenUser
+    user: User
 
 
 class TokenService: 
@@ -30,7 +22,7 @@ class TokenService:
         self.REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 
-    async def generate_token(self, user: User):
+    async def generate_token(self, user: User, token_use: str):
         payload = {
             "id": str(user.id),
             "username": user.username,
@@ -39,9 +31,14 @@ class TokenService:
         }
 
         to_encode = payload.copy()
-        expire = datetime.now() + timedelta(minutes=self.ACCESS_TOKEN_EXPIRE_MINUTES)
+        if token_use == "access":
+            expire = datetime.now(timezone.utc) + timedelta(minutes=self.ACCESS_TOKEN_EXPIRE_MINUTES)
+        elif token_use == "refresh":
+            expire = datetime.now(timezone.utc) + timedelta(days=self.REFRESH_TOKEN_EXPIRE_DAYS)
+        else:
+            raise ValueError("Invalid token use")
 
-        to_encode.update({"exp": expire})
+        to_encode.update({"exp": expire, "token_use": token_use})
         encoded_jwt = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
         return encoded_jwt
 

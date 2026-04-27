@@ -1,10 +1,9 @@
-import os
 from dotenv import load_dotenv
 from bcrypt import checkpw, hashpw, gensalt
 from fastapi import Depends, HTTPException, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.models.user import UserLogin, UserRegister, User
-from app.utils.auth.token import AuthResponse, TokenService, TokenUser
+from app.utils.auth.token import AuthResponse, TokenService
 from app.config import engine
 
 
@@ -32,8 +31,8 @@ class AuthService:
       password_hash=self.__get_password_hash(user_data.password)
     )
 
-    access_token = await self.token_service.generate_token(user=new_user)
-    refresh_token = await self.token_service.generate_token(user=new_user)
+    access_token = await self.token_service.generate_token(user=new_user, token_use="access")
+    refresh_token = await self.token_service.generate_token(user=new_user, token_use="refresh")
 
     await self.token_service.set_refresh_cookie(response, refresh_token)
 
@@ -41,12 +40,7 @@ class AuthService:
     
     return AuthResponse(
       access_token=access_token,
-      user=TokenUser(
-        id=new_user.id, 
-        username=new_user.username, 
-        email=new_user.email, 
-        role=new_user.role
-      )
+      user=new_user
     )
 
 
@@ -56,19 +50,14 @@ class AuthService:
     if not user:
       raise ValueError("Invalid credentials")
       
-    access_token = await self.token_service.generate_token(user=user)
-    refresh_token = await self.token_service.generate_token(user=user)
+    access_token = await self.token_service.generate_token(user=user, token_use="access")
+    refresh_token = await self.token_service.generate_token(user=user, token_use="refresh")
 
     await self.token_service.set_refresh_cookie(response, refresh_token)
 
     return AuthResponse(
       access_token=access_token, 
-      user=TokenUser(
-        id=user.id, 
-        username=user.username, 
-        email=user.email, 
-        role=user.role
-      )
+      user=user
     )
 
 
@@ -94,16 +83,11 @@ class AuthService:
       if not user:
           raise ValueError("User not found")
 
-      new_access_token = await self.token_service.generate_token(user)
+      new_access_token = await self.token_service.generate_token(user, token_use="access")
 
       return AuthResponse(
         access_token=new_access_token,
-        user=TokenUser(
-          id=user.id,
-          username=user.username,
-          email=user.email,
-          role=user.role
-        )
+        user=user
       )
 
     except Exception as e:
