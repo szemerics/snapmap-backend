@@ -3,7 +3,7 @@ import asyncio
 from pathlib import Path
 from typing import List
 import io
-from fastapi import UploadFile
+from fastapi import Response, UploadFile
 # Add src directory to Python path
 src_path = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(src_path))
@@ -117,8 +117,9 @@ async def __creating_users():
 
     for user in to_register_users:
         print(f'Registering user with email {user.email}...')
-        new_user = await auth.register_auth(user)
-        if not new_user:
+        try:
+            await auth.register_auth(user, Response())
+        except ValueError as e:
             print(f'User with email {user.email} already exists, skipping...')
             continue
 
