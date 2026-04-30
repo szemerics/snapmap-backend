@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 from app.config import engine
 from app import settings
@@ -9,7 +9,7 @@ from app.utils.images import ImageService
 from fastapi import File
 from odmantic import ObjectId
 import re
-
+from zoneinfo import ZoneInfo
 
 class PhotoView:
   # async def delete_all_photos():
@@ -45,11 +45,17 @@ class PhotoView:
         return found
     return None
 
+  @staticmethod
+  def _get_now() -> datetime:
+    now = datetime.now(ZoneInfo('Europe/Budapest'))
+    return now.replace(tzinfo=None)
+
 
   async def get_photos(
     photo_type: str = None, 
     username: str = None, 
     photo_id: ObjectId = None, 
+    category: str = None,
     date_captured_from: datetime = None, 
     date_captured_to: datetime = None,
     camera_brand: str = None,
@@ -60,13 +66,7 @@ class PhotoView:
     shutter_speed: str = None,
     aperture: str = None,
   ):
-    """
-    Get photos from the database with optional filters.
-    Args:
-        photo_type: Filter by photo type - 'post' (no location), 'map' (with location), or None (all)
-        username: Filter by user
-        photo_id: Filter by specific photo ID
-    """
+    """Get photos from the database with optional filters."""
     query = []
     
     # Photo type filter
@@ -85,6 +85,14 @@ class PhotoView:
 
     if photo_id:
       query.append(Photo.id == photo_id)
+
+    if category:
+      query.append({
+        "category": {
+          "$regex": re.escape(category),
+          "$options": "i",
+        }
+      })
 
     if date_captured_from:
       query.append(Photo.date_captured >= date_captured_from)
@@ -192,7 +200,7 @@ class PhotoView:
         category=new_photo.category,
         gear=new_photo.gear,
         settings_used=new_photo.settings_used,
-        date_posted=datetime.now(),
+        date_posted=PhotoView._get_now(),
         caption=new_photo.caption,
     )
 
@@ -303,7 +311,7 @@ class PhotoView:
 
     comment = Comment(
       user_summary=user_summary,
-      comment_date=datetime.now(),
+      comment_date=PhotoView._get_now(),
       content=new_comment.content
     )
 
@@ -328,7 +336,7 @@ class PhotoView:
 
     reply = Comment(
       user_summary=user_summary,
-      comment_date=datetime.now(),
+      comment_date=PhotoView._get_now(),
       content=new_comment.content
     )
 

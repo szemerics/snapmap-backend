@@ -18,7 +18,8 @@ router = APIRouter()
 async def get_photos(
     photo_type: Optional[PhotoTypeFilter] = None, 
     username: Optional[str] = None, 
-    photo_id: Optional[ObjectId] = None, 
+    photo_id: Optional[ObjectId] = None,
+    category: Optional[str] = None,
     camera_brand: Optional[str] = None, 
     camera_model: Optional[str] = None, 
     camera_type: Optional[str] = None, 
@@ -32,6 +33,7 @@ async def get_photos(
         photo_type=photo_type.value if photo_type else None,
         username=username,
         photo_id=photo_id,
+        category=category,
         date_captured_from=date_captured_from,
         date_captured_to=date_captured_to,
         camera_brand=camera_brand,
